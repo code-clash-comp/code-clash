@@ -108,7 +108,7 @@
       try{
         await signInWithEmailAndPassword(auth, email, password);
         showMsg('Logged in — redirecting...', 'info');
-        setTimeout(()=>{ window.location.href = '/'; }, 600);
+        setTimeout(()=>{ window.location.href = '/dashboard.hml'; }, 600);
       } catch(err){
         console.error('Login', err);
         showMsg(err?.message || 'Login failed', 'error');
