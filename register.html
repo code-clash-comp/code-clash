@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Register | Code Clash 2025</title>
+  <link rel="stylesheet" href="auth.css">
+  <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+  <div class="auth-page">
+    <header class="auth-header">
+      <h1 class="hero-title">&lt;/&gt; Code Clash 2025</h1>
+      <div class="typing-line" aria-live="polite">
+        <span id="typingTextRegister" class="typing-text"></span><span class="cursor" aria-hidden="true"></span>
+      </div>
+    </header>
+
+    <main>
+      <div class="form-container">
+        <form id="registerForm" class="auth-form" autocomplete="off">
+          <h2 class="form-title">Register</h2>
+
+          <input id="name" type="text" placeholder="Full Name" required autocomplete="name" />
+          <input id="grade" type="text" placeholder="Grade & Section" required />
+          <input id="email" type="email" placeholder="Email" required autocomplete="email" />
+          <input id="phone" type="tel" placeholder="Phone Number" required />
+          <input id="password" type="password" placeholder="Password" required autocomplete="new-password" />
+
+          <button type="submit" class="auth-btn" id="registerBtn">Register</button>
+
+          <div id="regMsg" class="auth-msg" role="status" aria-live="polite"></div>
+
+          <p class="auth-note">Already registered? <a href="login.html">Login</a></p>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <!-- Firebase (modular) + registration logic -->
+  <script type="module">
+    // --------- Put your firebaseConfig here (replace the placeholders) ----------
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
+      authDomain: "code-clash-2025.firebaseapp.com",
+      projectId: "code-clash-2025",
+      storageBucket: "code-clash-2025.firebasestorage.app",
+      messagingSenderId: "13717806434",
+      appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
+      measurementId: "G-0BMTHMYMEL"
+    };
+    // ------------------------------------------------------------------------
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    // init
+    const app = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // typewriter (looping)
+    (function typewriterRegister(){
+      const el = document.getElementById('typingTextRegister');
+      const phrases = [
+        'Register to join the clash',
+        'Secure your seat — 32 slots only',
+        'H2H Python duels · 1v1, team points'
+      ];
+      let p = 0, ch = 0, deleting = false;
+      const typingSpeed = 50, pauseAfter = 900;
+      function tick(){
+        const cur = phrases[p];
+        if(!deleting){
+          el.textContent = cur.slice(0, ch+1);
+          ch++;
+          if(ch === cur.length){
+            deleting = true;
+            setTimeout(tick, pauseAfter);
+            return;
+          }
+        } else {
+          el.textContent = cur.slice(0, ch-1);
+          ch--;
+          if(ch === 0){
+            deleting = false;
+            p = (p+1) % phrases.length;
+          }
+        }
+        setTimeout(tick, deleting ? typingSpeed/1.2 : typingSpeed);
+      }
+      tick();
+    })();
+
+    // Helpers to show messages
+    const regMsg = (text, type='info')=>{
+      const el = document.getElementById('regMsg');
+      el.textContent = text;
+      el.style.color = (type === 'error') ? '#f6a6a6' : '#bfe8c6';
+    };
+
+    // Register flow
+    const form = document.getElementById('registerForm');
+    const btn = document.getElementById('registerBtn');
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      regMsg('', 'info');
+
+      const name = document.getElementById('name').value.trim();
+      const grade = document.getElementById('grade').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value;
+
+      if(!name || !grade || !email || !phone || !password){
+        regMsg('Please fill all fields.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Registering...';
+
+      try{
+        // create user
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCred.user;
+
+        // update displayName
+        await updateProfile(user, { displayName: name });
+
+        // store profile in Firestore under collection 'users' with doc id = uid
+        await setDoc(doc(db, 'users', user.uid), {
+          name,
+          grade,
+          email,
+          phone,
+          createdAt: serverTimestamp()
+        });
+
+        regMsg('Registered successfully! Redirecting...', 'info');
+
+        // optionally redirect after short delay
+        setTimeout(()=>{ window.location.href = '/'; }, 900);
+
+      } catch(err){
+        // show friendly error
+        const msg = err?.message || String(err);
+        regMsg(msg, 'error');
+        console.error('Register error', err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Register';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard | Code Clash 2025</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+  <div class="nav">
+    <div class="nav-name">
+      <h1 class="nav-name-title">&lt;/&gt; Code Clash 2025</h1>
+    </div>
+
+    <div class="nav-actions">
+      <button class="nav-actions-register" id="navRegister">Dashboard</button>
+      <button class="nav-actions-login" id="navLogin">Login</button>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="dashboard-header container">
+    <h2 class="page-title">Dashboard</h2>
+    <div class="typing-line" style="margin-top:8px;">
+      <span id="typingDashboard" class="typing-text"></span><span class="cursor" aria-hidden="true"></span>
+    </div>
+  </header>
+
+  <!-- STACKED CARDS -->
+  <main class="container" style="margin-top:18px;">
+    <!-- PROFILE CARD -->
+    <section class="panel profile-panel">
+      <div class="panel-title">Your Profile</div>
+      <div id="profileLoggedOut" class="small muted" style="margin-top:8px">Please <a href="login.html">login</a> to see and edit your profile.</div>
+
+      <div id="profileCard" style="margin-top:10px; display:none">
+        <div class="mini-grid">
+          <!-- Name -->
+          <div class="mini-card" id="card-name">
+            <div class="mini-head">
+              <div class="mini-title">Name</div>
+              <button class="mini-edit" data-field="name" title="Edit name">✏️</button>
+            </div>
+            <div class="mini-body">
+              <div class="mini-value" id="val-name">-</div>
+              <div class="mini-edit-area" id="edit-name" style="display:none">
+                <input id="inp-name-mini" type="text" placeholder="Full name" />
+                <div class="mini-actions">
+                  <button class="btn mini-save" data-field="name">Save</button>
+                  <button class="btn mini-cancel" data-field="name">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grade -->
+          <div class="mini-card" id="card-grade">
+            <div class="mini-head">
+              <div class="mini-title">Grade &amp; Section</div>
+              <button class="mini-edit" data-field="grade" title="Edit grade/section">✏️</button>
+            </div>
+            <div class="mini-body">
+              <div class="mini-value" id="val-grade">-</div>
+              <div class="mini-edit-area" id="edit-grade" style="display:none">
+                <input id="inp-grade-mini" type="text" placeholder="Grade & Section" />
+                <div class="mini-actions">
+                  <button class="btn mini-save" data-field="grade">Save</button>
+                  <button class="btn mini-cancel" data-field="grade">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div class="mini-card" id="card-phone">
+            <div class="mini-head">
+              <div class="mini-title">Phone</div>
+              <button class="mini-edit" data-field="phone" title="Edit phone">✏️</button>
+            </div>
+            <div class="mini-body">
+              <div class="mini-value" id="val-phone">-</div>
+              <div class="mini-edit-area" id="edit-phone" style="display:none">
+                <input id="inp-phone-mini" type="tel" placeholder="Phone number" />
+                <div class="mini-actions">
+                  <button class="btn mini-save" data-field="phone">Save</button>
+                  <button class="btn mini-cancel" data-field="phone">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="mini-card" id="card-email">
+            <div class="mini-head">
+              <div class="mini-title">Email</div>
+              <button class="mini-edit" data-field="email" title="Edit email">✏️</button>
+            </div>
+            <div class="mini-body">
+              <div class="mini-value" id="val-email">-</div>
+              <div class="mini-edit-area" id="edit-email" style="display:none">
+                <input id="inp-email-mini" type="email" placeholder="Email" />
+                <div class="mini-actions">
+                  <button class="btn mini-save" data-field="email">Save</button>
+                  <button class="btn mini-cancel" data-field="email">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- team badge -->
+        <div id="teamBadgeWrap" style="margin-top:12px; display:none">
+          <div class="small muted">Your team</div>
+          <div id="teamBadge" class="team-badge" role="button" tabindex="0" title="Click to view your team"></div>
+        </div>
+
+        <div id="profileMsg" class="small muted" style="margin-top:10px; min-height:18px"></div>
+      </div>
+    </section>
+
+    <!-- TEAMS CARD -->
+    <section class="panel teams-panel" style="margin-top:12px;">
+      <div class="panel-title">Teams</div>
+      <div class="small muted">Create or join a team. Max 8 teams total.</div>
+
+      <div class="teams-controls" style="margin-top:12px; display:flex; gap:10px;">
+        <button id="createTeamBtn" class="btn primary">Create Team</button>
+        <button id="refreshBtn" class="btn">Refresh</button>
+      </div>
+
+      <div id="teamsList" class="teams-list" style="margin-top:12px"></div>
+      <div id="teamNote" class="small muted" style="margin-top:10px"></div>
+    </section>
+  </main>
+
+  <!-- COMPETITION DETAILS -->
+  <main class="container" style="margin-top:18px; margin-bottom:40px;">
+    <section class="panel">
+      <div class="panel-title">Competition Details</div>
+      <div id="compDetails" class="small muted" style="margin-top:8px">
+        <strong>Format:</strong> 1v1 duels, teams earn points.<br>
+        <strong>Participants max:</strong> <span id="cMax">32</span><br>
+        <strong>Teams max:</strong> 8<br>
+        <strong>Team size limit:</strong> <span id="teamLimitDisplay">4</span><br>
+        <strong>Rules:</strong> Be respectful. Follow time limits. No plagiarism.
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-foot muted">Hosted on GitHub Pages · Good luck and have fun!</footer>
+
+  <!-- CREATE TEAM MODAL -->
+  <div id="createTeamModal" class="modal" aria-hidden="true">
+    <div class="modal-panel">
+      <h3 style="margin:0 0 8px 0;color:var(--accent)">Create a Team</h3>
+      <label class="pf-label">Team name
+        <input id="modalTeamName" type="text" placeholder="Short team name" />
+      </label>
+      <div style="margin-top:8px;">
+        <div class="pf-label">Pick a team color</div>
+        <div id="colorOptions" class="color-grid" style="margin-top:8px"></div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <button id="modalCreateBtn" class="btn primary">Create</button>
+        <button id="modalCancelBtn" class="btn">Cancel</button>
+      </div>
+      <div id="modalMsg" class="small muted" style="margin-top:8px; min-height:18px"></div>
+    </div>
+    <div class="modal-backdrop"></div>
+  </div>
+
+<script type="module">
+(async function(){
+  // ---------- CONFIG ----------
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
+    authDomain: "code-clash-2025.firebaseapp.com",
+    projectId: "code-clash-2025",
+    storageBucket: "code-clash-2025.firebasestorage.app",
+    messagingSenderId: "13717806434",
+    appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
+    measurementId: "G-0BMTHMYMEL"
+  };
+  const MAX_TEAMS = 8;
+  const MAX_PARTICIPANTS = 32;
+  const TEAM_SIZE_LIMIT = 4;                 // <-- change this if you want different per-team cap
+  const TEAM_COLORS = [
+    { id: 'green',  hex: '#7fbf7f', name:'Green' },
+    { id: 'teal',   hex: '#5fb0a0', name:'Teal' },
+    { id: 'blue',   hex: '#6ea8ff', name:'Blue' },
+    { id: 'purple', hex: '#b58cff', name:'Purple' },
+    { id: 'orange', hex: '#f0a76b', name:'Orange' },
+    { id: 'red',    hex: '#ff7b7b', name:'Red' },
+    { id: 'yellow', hex: '#ffe08a', name:'Yellow' },
+    { id: 'pink',   hex: '#ffb3d1', name:'Pink' }
+  ];
+  document.getElementById('teamLimitDisplay').textContent = String(TEAM_SIZE_LIMIT);
+  const phrases = [
+    'Are you ready to duel?',
+    'Fastest correct solution wins.',
+    '1v1 duels — team points on the line.',
+    'Sharpen your loops. Debug your logic.'
+  ];
+  // ----------------------------
+
+  // TYPEWRITER header
+  (function typingHeader(){
+    const el = document.getElementById('typingDashboard');
+    if(!el) return;
+    let p=0,ch=0,deleting=false;
+    const typingSpeed = 45, pauseAfter = 900;
+    function tick(){
+      const cur = phrases[p] || '';
+      if(!deleting){
+        ch = Math.min(ch+1, cur.length);
+        el.textContent = cur.slice(0,ch);
+        if(ch === cur.length){ deleting = true; setTimeout(tick, pauseAfter); return; }
+      } else {
+        ch = Math.max(ch-1, 0);
+        el.textContent = cur.slice(0,ch);
+        if(ch === 0){ deleting = false; p=(p+1)%phrases.length; }
+      }
+      setTimeout(tick, deleting ? Math.round(typingSpeed/1.2) : typingSpeed);
+    }
+    tick();
+  })();
+
+  // DOM refs
+  const valName = document.getElementById('val-name');
+  const valGrade = document.getElementById('val-grade');
+  const valPhone = document.getElementById('val-phone');
+  const valEmail = document.getElementById('val-email');
+
+  const editButtons = Array.from(document.querySelectorAll('.mini-edit'));
+  const saveButtons = Array.from(document.querySelectorAll('.mini-save'));
+  const cancelButtons = Array.from(document.querySelectorAll('.mini-cancel'));
+
+  const inpName = document.getElementById('inp-name-mini');
+  const inpGrade = document.getElementById('inp-grade-mini');
+  const inpPhone = document.getElementById('inp-phone-mini');
+  const inpEmail = document.getElementById('inp-email-mini');
+
+  const teamsList = document.getElementById('teamsList');
+  const teamNote = document.getElementById('teamNote');
+  const createTeamBtn = document.getElementById('createTeamBtn');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const cMax = document.getElementById('cMax'); cMax.textContent = String(MAX_PARTICIPANTS);
+
+  const teamBadgeWrap = document.getElementById('teamBadgeWrap');
+  const teamBadge = document.getElementById('teamBadge');
+
+  const profileLoggedOut = document.getElementById('profileLoggedOut');
+  const profileCard = document.getElementById('profileCard');
+  const profileMsg = document.getElementById('profileMsg');
+
+  // modal refs
+  const createTeamModal = document.getElementById('createTeamModal');
+  const modalTeamName = document.getElementById('modalTeamName');
+  const colorOptions = document.getElementById('colorOptions');
+  const modalCreateBtn = document.getElementById('modalCreateBtn');
+  const modalCancelBtn = document.getElementById('modalCancelBtn');
+  const modalMsg = document.getElementById('modalMsg');
+
+  // firebase imports
+  const [
+    { initializeApp },
+    { getFirestore, collection, doc, updateDoc, addDoc, onSnapshot, arrayUnion, arrayRemove, deleteDoc, getDoc, query, where, getDocs },
+    { getAuth, onAuthStateChanged, updateProfile, updateEmail, signOut }
+  ] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
+    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js')
+  ]).catch(err=>{ console.error('firebase imports failed', err); throw err; });
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // state
+  let currentUser = null;
+  let currentUserDoc = null;
+  let allTeams = [];
+  let usersMap = {}; // uid -> profile (name, email, grade, phone)
+
+  // ---------- users listener (build usersMap for display names) ----------
+  onSnapshot(collection(db, 'users'), (snap)=>{
+    usersMap = {};
+    snap.forEach(d=> usersMap[d.id] = d.data());
+    // refresh UI that depends on users
+    populateMiniValues();
+    renderTeamsList();
+    updateTeamBadge();
+  }, err=>{ console.error('users listener', err); });
+
+  // ---------- helper UI functions ----------
+  function showLoggedOut(){ profileLoggedOut.style.display='block'; profileCard.style.display='none'; teamBadgeWrap.style.display='none'; }
+  function showProfileCard(){ profileLoggedOut.style.display='none'; profileCard.style.display='block'; }
+
+  function populateMiniValues(){
+    valName.textContent = (currentUserDoc?.name) || (currentUser?.displayName) || '-';
+    valGrade.textContent = currentUserDoc?.grade || '-';
+    valPhone.textContent = currentUserDoc?.phone || '-';
+    valEmail.textContent = currentUser?.email || currentUserDoc?.email || '-';
+  }
+
+  function openEdit(field){
+    document.querySelectorAll('.mini-value').forEach(el=>el.style.display='none');
+    document.querySelectorAll('.mini-edit-area').forEach(el=>el.style.display='none');
+    const editArea = document.getElementById('edit-' + field);
+    const valEl = document.getElementById('val-' + field);
+    if(!editArea || !valEl) return;
+    if(field === 'name') inpName.value = currentUserDoc?.name || currentUser?.displayName || '';
+    if(field === 'grade') inpGrade.value = currentUserDoc?.grade || '';
+    if(field === 'phone') inpPhone.value = currentUserDoc?.phone || '';
+    if(field === 'email') inpEmail.value = currentUser?.email || currentUserDoc?.email || '';
+    valEl.style.display='none';
+    editArea.style.display='block';
+    const input = editArea.querySelector('input'); if(input) input.focus();
+  }
+
+  function closeEdit(field){
+    const editArea = document.getElementById('edit-' + field);
+    const valEl = document.getElementById('val-' + field);
+    if(editArea) editArea.style.display='none';
+    if(valEl) valEl.style.display='block';
+    profileMsg.textContent = '';
+  }
+
+  async function saveField(field){
+    if(!currentUser) { alert('Please login to edit'); return; }
+    profileMsg.textContent = '';
+    let newVal = '';
+    if(field === 'name') newVal = inpName.value.trim();
+    if(field === 'grade') newVal = inpGrade.value.trim();
+    if(field === 'phone') newVal = inpPhone.value.trim();
+    if(field === 'email') newVal = inpEmail.value.trim();
+
+    if(field === 'name' && !newVal){
+      profileMsg.style.color = '#f6a6a6'; profileMsg.textContent = 'Name cannot be empty.'; return;
+    }
+
+    const saveBtn = document.querySelector(`.mini-save[data-field="${field}"]`);
+    if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const patch = {}; patch[field] = newVal || '';
+      await updateDoc(userRef, patch);
+
+      if(field === 'name' && currentUser.displayName !== newVal){
+        try { await updateProfile(currentUser, { displayName: newVal }); } catch(e){ console.warn('updateProfile failed', e); }
+      }
+      if(field === 'email' && newVal && newVal !== (currentUser.email || currentUserDoc?.email || '')){
+        try {
+          await updateEmail(currentUser, newVal);
+        } catch(e){
+          console.warn('updateEmail failed', e);
+          profileMsg.style.color = '#f6a6a6';
+          profileMsg.textContent = 'Email not updated in Auth: recent login required. Profile doc updated.';
+        }
+      } else {
+        profileMsg.style.color = '#bfe8c6';
+        profileMsg.textContent = 'Saved.';
+      }
+    } catch(e){
+      console.error('save field err', e);
+      profileMsg.style.color = '#f6a6a6';
+      profileMsg.textContent = 'Failed to save. Try again.';
+    } finally {
+      if(saveBtn){ saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+      closeEdit(field);
+    }
+  }
+
+  editButtons.forEach(btn => btn.onclick = ()=> openEdit(btn.dataset.field));
+  saveButtons.forEach(btn => btn.onclick = ()=> saveField(btn.dataset.field));
+  cancelButtons.forEach(btn => btn.onclick = ()=> closeEdit(btn.dataset.field));
+
+  // ---------- teams listener ----------
+  onSnapshot(collection(db, 'teams'), (snap)=>{
+    allTeams = [];
+    snap.forEach(d=> allTeams.push({ id:d.id, ...d.data() }));
+    renderTeamsList();
+    updateCreateButtonState();
+    updateTeamBadge();
+  }, err=>{ console.error('teams listener', err); });
+
+  // render teams with member names and captain controls
+  function renderTeamsList(){
+    teamsList.innerHTML = '';
+    if(allTeams.length === 0){
+      const el = document.createElement('div'); el.className='small muted'; el.textContent='No teams yet. Create one!';
+      teamsList.appendChild(el); return;
+    }
+    // sort by creation time or name
+    allTeams.sort((a,b)=> {
+      if(a.createdAt && b.createdAt) return (a.createdAt.seconds||0) - (b.createdAt.seconds||0);
+      return (a.name||'').localeCompare(b.name||'');
+    });
+
+    allTeams.forEach(team=>{
+      const d = document.createElement('details');
+      d.className = 'team-card-details';
+      const summary = document.createElement('summary'); summary.className = 'team-card';
+      // color indicator
+      const colorBar = document.createElement('div');
+      colorBar.className = 'team-color-bar';
+      colorBar.style.background = team.color || '#7fbf7f'; // fallback
+      summary.appendChild(colorBar);
+
+      const hdr = document.createElement('div'); hdr.className = 'team-card-hdr';
+      const name = document.createElement('div'); name.className='team-card-name'; name.textContent = team.name || 'Unnamed Team';
+      const meta = document.createElement('div'); meta.className='small muted'; meta.textContent = `${(team.members||[]).length} member${(team.members||[]).length===1?'':'s'}`;
+      hdr.appendChild(name); hdr.appendChild(meta);
+      summary.appendChild(hdr);
+
+      const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='8px'; actions.style.alignItems='center';
+      const isCaptain = currentUser && team.captainUid === currentUser.uid;
+      if(team.captainUid){
+        const cap = document.createElement('span'); cap.className='crown'; cap.textContent='👑'; cap.title='Captain';
+        actions.appendChild(cap);
+      }
+
+      const viewBtn = document.createElement('button'); viewBtn.className='btn'; viewBtn.textContent='Open';
+      viewBtn.onclick = (e)=> { e.preventDefault(); d.open = !d.open; };
+      actions.appendChild(viewBtn);
+
+      // join/leave logic + size limit
+      const isMember = currentUser && (team.members||[]).includes(currentUser.uid);
+      const userTeam = currentUser && allTeams.find(t => (t.members||[]).includes(currentUser.uid));
+      const joinBtn = document.createElement('button'); joinBtn.className='btn'; joinBtn.textContent='Join';
+      const leaveBtn = document.createElement('button'); leaveBtn.className='btn'; leaveBtn.textContent='Leave';
+      if(isMember) joinBtn.style.display='none'; else joinBtn.style.display='inline-block';
+      if(!isMember) leaveBtn.style.display='none';
+
+      // disable join if team is full or user already in another team
+      if((team.members||[]).length >= TEAM_SIZE_LIMIT) { joinBtn.disabled = true; joinBtn.classList.add('disabled-btn'); joinBtn.title='Team is full'; }
+      if(userTeam && !isMember){ joinBtn.disabled = true; joinBtn.classList.add('disabled-btn'); joinBtn.title='You are in another team'; }
+
+      joinBtn.onclick = async (ev)=> {
+        ev.preventDefault();
+        if(!currentUser){ alert('Login to join'); return; }
+        if((team.members||[]).length >= TEAM_SIZE_LIMIT){ alert('Team is full.'); return; }
+        // ensure not already in another team
+        const already = allTeams.find(t => (t.members||[]).includes(currentUser.uid));
+        if(already){ alert('Leave your current team first.'); return; }
+        try{ await updateDoc(doc(db,'teams',team.id), { members: arrayUnion(currentUser.uid) }); } catch(e){ console.error('join err', e); alert('Failed to join (permissions?).'); }
+      };
+
+      leaveBtn.onclick = async (ev)=> {
+        ev.preventDefault();
+        if(!currentUser){ alert('Login to leave'); return; }
+        if(team.captainUid === currentUser.uid){ alert("You're the captain — transfer or disband to leave."); return; }
+        try{ await updateDoc(doc(db,'teams',team.id), { members: arrayRemove(currentUser.uid) }); } catch(e){ console.error('leave err', e); alert('Failed to leave (permissions?).'); }
+      };
+
+      actions.appendChild(joinBtn);
+      actions.appendChild(leaveBtn);
+
+      // captain-only: disband button and ability to transfer captain
+      if(isCaptain){
+        const dis = document.createElement('button'); dis.className='btn'; dis.textContent='Disband';
+        dis.onclick = async (ev)=>{ ev.preventDefault(); if(!confirm(`Disband "${team.name}"?`)) return; try{ await deleteDoc(doc(db,'teams',team.id)); } catch(e){ console.error(e); alert('Failed to disband (permissions?).'); } };
+        actions.appendChild(dis);
+      }
+
+      summary.appendChild(actions);
+      d.appendChild(summary);
+
+      // expanded body: members list with names and captain controls
+      const body = document.createElement('div'); body.className='team-expanded';
+      body.style.padding = '10px';
+
+      const membersWrap = document.createElement('div');
+      (team.members||[]).forEach(uid=>{
+        const row = document.createElement('div'); row.className='team-member-row';
+        row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.padding='6px 0';
+
+        // use usersMap for friendly name
+        const profile = usersMap[uid] || null;
+        const displayName = profile?.name || profile?.email || uid;
+        const left = document.createElement('div');
+        left.innerHTML = `${displayName} ${uid === team.captainUid ? '<span class="small muted">(captain)</span>' : ''} ${uid === currentUser?.uid ? '<span class="small muted">(you)</span>' : ''}`;
+
+        const right = document.createElement('div'); right.style.display='flex'; right.style.gap='8px';
+        // captain controls: remove / transfer
+        if(currentUser && team.captainUid === currentUser.uid && uid !== currentUser.uid){
+          const rm = document.createElement('button'); rm.className='btn small-btn'; rm.textContent='Remove';
+          rm.onclick = async ()=>{ if(!confirm(`Remove ${displayName}?`)) return; try{ await updateDoc(doc(db,'teams',team.id), { members: arrayRemove(uid) }); } catch(e){ console.error(e); alert('Failed to remove'); } };
+          const promote = document.createElement('button'); promote.className='btn small-btn'; promote.textContent='Make Captain';
+          promote.onclick = async ()=>{ if(!confirm(`Make ${displayName} the captain?`)) return; try{ await updateDoc(doc(db,'teams',team.id), { captainUid: uid }); } catch(e){ console.error(e); alert('Failed to transfer captain'); } };
+          right.appendChild(promote); right.appendChild(rm);
+        }
+        // if this is current user and not captain, allow small leave
+        if(currentUser && uid === currentUser.uid && team.captainUid !== currentUser.uid){
+          const leaveSmall = document.createElement('button'); leaveSmall.className='btn small-btn'; leaveSmall.textContent='Leave';
+          leaveSmall.onclick = async ()=>{ if(!confirm('Leave this team?')) return; try{ await updateDoc(doc(db,'teams',team.id), { members: arrayRemove(currentUser.uid) }); } catch(e){ console.error(e); alert('Failed to leave'); } };
+          right.appendChild(leaveSmall);
+        }
+
+        row.appendChild(left); row.appendChild(right); membersWrap.appendChild(row);
+      });
+      body.appendChild(membersWrap);
+      d.appendChild(body);
+      teamsList.appendChild(d);
+    });
+  }
+
+  // update create button state
+  function updateCreateButtonState(){
+    const userHasTeam = currentUser && allTeams.some(t => (t.members||[]).includes(currentUser.uid));
+    if(allTeams.length >= MAX_TEAMS || userHasTeam){
+      createTeamBtn.classList.add('disabled-btn'); createTeamBtn.disabled = true;
+      teamNote.textContent = allTeams.length >= MAX_TEAMS ? 'Team cap reached (8).' : 'You already belong to a team.';
+    } else {
+      createTeamBtn.classList.remove('disabled-btn'); createTeamBtn.disabled = false;
+      teamNote.textContent = '';
+    }
+  }
+
+  // team badge
+  function updateTeamBadge(){
+    if(!currentUser || !currentUser.uid){ teamBadgeWrap.style.display='none'; return; }
+    const myTeam = allTeams.find(t => (t.members||[]).includes(currentUser.uid));
+    if(!myTeam){ teamBadgeWrap.style.display='none'; return; }
+    teamBadgeWrap.style.display='block';
+    teamBadge.textContent = `${myTeam.name} (${(myTeam.members||[]).length})`;
+    // color
+    teamBadge.style.borderColor = 'rgba(143,217,155,0.06)';
+    teamBadge.onclick = ()=> {
+      const detailsEls = Array.from(document.querySelectorAll('.team-card-details'));
+      for(const d of detailsEls){
+        const nameEl = d.querySelector('.team-card-name');
+        if(nameEl && nameEl.textContent === myTeam.name){
+          d.open = true;
+          d.scrollIntoView({ behavior:'smooth', block:'center' });
+          return;
+        }
+      }
+    };
+  }
+
+  // ---------- CREATE TEAM MODAL UI ----------
+  // fill color options
+  function renderColorOptions(){
+    colorOptions.innerHTML = '';
+    TEAM_COLORS.forEach((c, i)=>{
+      const btn = document.createElement('button');
+      btn.className = 'color-option';
+      btn.dataset.color = c.hex;
+      btn.title = c.name;
+      btn.style.background = c.hex;
+      btn.onclick = (e)=> {
+        e.preventDefault();
+        // highlight selected
+        document.querySelectorAll('.color-option').forEach(b=> b.classList.remove('selected'));
+        btn.classList.add('selected');
+      };
+      colorOptions.appendChild(btn);
+      // preselect first
+      if(i===0) btn.classList.add('selected');
+    });
+  }
+  renderColorOptions();
+
+  function openModal(){ createTeamModal.setAttribute('aria-hidden','false'); createTeamModal.classList.add('open'); modalMsg.textContent = ''; modalTeamName.value=''; }
+  function closeModal(){ createTeamModal.setAttribute('aria-hidden','true'); createTeamModal.classList.remove('open'); modalMsg.textContent = ''; }
+
+  createTeamBtn.onclick = ()=> openModal();
+  modalCancelBtn.onclick = ()=> closeModal();
+
+  modalCreateBtn.onclick = async ()=>{
+    if(!currentUser){ alert('Login to create team'); return; }
+    const name = (modalTeamName.value || '').trim();
+    if(!name){ modalMsg.style.color='#f6a6a6'; modalMsg.textContent = 'Please enter a team name.'; return; }
+    // selected color
+    const sel = document.querySelector('.color-option.selected');
+    const color = sel ? sel.dataset.color : TEAM_COLORS[0].hex;
+    // ensure not in team already
+    const already = allTeams.find(t => (t.members||[]).includes(currentUser.uid));
+    if(already){ modalMsg.style.color='#f6a6a6'; modalMsg.textContent = 'You are already in a team.'; return; }
+    if(allTeams.length >= MAX_TEAMS){ modalMsg.style.color='#f6a6a6'; modalMsg.textContent = 'Team cap reached.'; return; }
+    modalCreateBtn.disabled = true; modalCreateBtn.textContent = 'Creating...';
+    try{
+      await addDoc(collection(db,'teams'), {
+        name,
+        captainUid: currentUser.uid,
+        members: [ currentUser.uid ],
+        color,
+        createdAt: new Date()
+      });
+      closeModal();
+    } catch(e){
+      console.error('create team err', e);
+      modalMsg.style.color = '#f6a6a6';
+      modalMsg.textContent = 'Failed to create (permissions?).';
+    } finally {
+      modalCreateBtn.disabled = false; modalCreateBtn.textContent = 'Create';
+    }
+  };
+
+  // ---------- auth & current user doc listener ----------
+  onAuthStateChanged(auth, (user)=>{
+    currentUser = user;
+    if(user){
+      profileLoggedOut.style.display='none';
+      profileCard.style.display='block';
+      startUserListener(user.uid);
+      const navLogin = document.getElementById('navLogin');
+      if(navLogin){ navLogin.textContent='Logout'; navLogin.onclick = async ()=>{ if(!confirm('Logout?')) return; try{ await signOut(auth); }catch(e){console.error(e);} }; }
+    } else {
+      showLoggedOut();
+      currentUserDoc = null;
+      populateMiniValues();
+      const navLogin = document.getElementById('navLogin');
+      if(navLogin){ navLogin.textContent='Login'; navLogin.onclick = ()=> window.location.href='login.html'; }
+    }
+    updateCreateButtonState();
+  });
+
+  function startUserListener(uid){
+    const userRef = doc(db, 'users', uid);
+    try {
+      onSnapshot(userRef, (snap) => {
+        currentUserDoc = snap.exists ? snap.data() : null;
+        populateMiniValues(); showProfileCard(); updateCreateButtonState(); updateTeamBadge();
+      }, err => console.error('user doc err', err));
+    } catch(e){ console.error('startUserListener', e); }
+  }
+
+  // initial UI
+  showLoggedOut();
+
+})();
+</script>
+</body>
+</html>

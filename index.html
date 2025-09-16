@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Code Clash 2025</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+  <div class="nav">
+    <div class="nav-name">
+      <h1 class="nav-name-title">&lt;/&gt; Code Clash 2025</h1>
+    </div>
+
+    <div class="nav-actions">      
+      <button class="nav-actions-register" id="navRegister">Register</button>
+      <button class="nav-actions-login" id="navLogin">Login</button>
+      <button id="navDashboard" style="display:none;">Dashboard</button>
+      <button id="navLogout" style="display:none;">Logout</button>
+    </div>
+  </div>
+
+  <main class="main-stage">
+    <section class="anim-stage" aria-labelledby="heroTitle">
+      <div class="stage-inner">
+        <div class="typebox">
+          <h1 id="heroTitle" class="hero-title">&lt;/&gt; Code Clash 2025</h1>
+
+          <!-- Welcome message (appears only when logged in) -->
+          <h2 id="welcomeMsg" class="welcome-msg" style="display:none;"></h2>
+
+          <div class="muted tagline">Fast. Fair. Friendly. — 1v1 duels, team points.</div>
+
+          <div class="typing-line" aria-live="polite">
+            <div id="typingText" class="typing-text"></div>
+            <div class="cursor" aria-hidden="true"></div>
+          </div>
+
+          <div id="countdownPills" class="countdown" role="timer" aria-live="polite">
+            <div class="cd-pill"><div class="bignum" id="cdDays">--</div><div class="lbl">Days</div></div>
+            <div class="cd-pill"><div class="bignum" id="cdHours">--</div><div class="lbl">Hours</div></div>
+            <div class="cd-pill"><div class="bignum" id="cdMins">--</div><div class="lbl">Minutes</div></div>
+            <div class="cd-pill"><div class="bignum" id="cdSecs">--</div><div class="lbl">Seconds</div></div>
+          </div>
+
+          <div class="register-cta-wrapper">
+            <button id="bigRegister" class="big-register">Register for Code Clash 2025</button>
+            <div class="small muted" style="margin-top:10px">
+              We'll reach out to you by email or Discord for contest updates.
+            </div>
+          </div>
+        </div>
+
+        <aside class="right-panel" aria-hidden="false">
+          <div class="panel" id="infoPanel">
+            <div class="panel-title">Event Info</div>
+
+            <div class="info-flex">
+              <div>
+                <div class="small muted">Participants(max)</div>
+                <div id="participantsCount" style="font-size:20px;font-weight:700;color:var(--accent)">32</div>
+              </div>
+              <div>
+                <div class="small muted">Teams</div>
+                <div id="teamsCount" style="font-size:20px;font-weight:700;color:var(--accent)">8</div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <div class="small muted">Live Registrations</div>
+              <div id="liveReg" style="font-size:22px;font-weight:800;color:var(--accent)">0</div>
+              <div class="small muted slots-left" style="margin-top:6px">Slots left: <span id="slotsLeft">32</span></div>
+
+              <div class="progress" aria-hidden="true" style="margin-top:10px">
+                <div class="progress-track" role="presentation">
+                  <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-foot muted">Hosted on GitHub Pages · Good luck and have fun!</footer>
+
+<script type="module">
+(async function(){
+  // ---------- CONFIG ----------
+  const EVENT_DATE = null;
+  const demoTarget = new Date(Date.now() + 2*60*1000); // demo target
+  const target = EVENT_DATE ? new Date(EVENT_DATE) : demoTarget;
+  const MAX_PARTICIPANTS = 32;
+
+  const phrases = [
+    'Are you ready to duel?',
+    'Fastest correct solution wins.',
+    '1v1 duels — team points on the line.',
+    'Sharpen your loops. Debug your logic.'
+  ];
+
+  // ---------- TYPING ANIMATION ----------
+  (function typing(){
+    const el = document.getElementById('typingText');
+    if(!el) return;
+    let p = 0, ch = 0, deleting = false;
+    const typingSpeed = 45, pauseAfter = 900;
+    function tick(){
+      const cur = phrases[p];
+      if(!deleting){
+        el.textContent = cur.slice(0, ch+1);
+        ch++;
+        if(ch === cur.length){
+          deleting = true;
+          setTimeout(tick, pauseAfter);
+          return;
+        }
+      } else {
+        el.textContent = cur.slice(0, ch-1);
+        ch--;
+        if(ch === 0){
+          deleting = false;
+          p = (p+1) % phrases.length;
+        }
+      }
+      setTimeout(tick, deleting ? typingSpeed/1.2 : typingSpeed);
+    }
+    tick();
+  })();
+
+  // ---------- COUNTDOWN ----------
+  (function countdown(){
+    const dEl = document.getElementById('cdDays');
+    const hEl = document.getElementById('cdHours');
+    const mEl = document.getElementById('cdMins');
+    const sEl = document.getElementById('cdSecs');
+    if(!dEl || !hEl || !mEl || !sEl) return;
+    function update(){
+      const now = Date.now();
+      let diff = target - now;
+      if(diff <= 0){
+        dEl.textContent = '00'; hEl.textContent='00'; mEl.textContent='00'; sEl.textContent='00';
+        return;
+      }
+      const secs = Math.floor(diff / 1000);
+      const days = Math.floor(secs / 86400);
+      const hours = Math.floor((secs % 86400) / 3600);
+      const mins = Math.floor((secs % 3600) / 60);
+      const s = secs % 60;
+      dEl.textContent = String(days).padStart(2,'0');
+      hEl.textContent = String(hours).padStart(2,'0');
+      mEl.textContent = String(mins).padStart(2,'0');
+      sEl.textContent = String(s).padStart(2,'0');
+    }
+    update();
+    setInterval(update, 1000);
+  })();
+
+  // ---------- DOM refs ----------
+  const navLogin = document.getElementById('navLogin');
+  const navRegister = document.getElementById('navRegister');
+  const navDashboard = document.getElementById('navDashboard'); // hidden in HTML, kept for compatibility
+  const navLogout = document.getElementById('navLogout');     // hidden in HTML, kept for compatibility
+  const bigReg = document.getElementById('bigRegister');
+  const welcomeMsg = document.getElementById('welcomeMsg');
+
+  const participantsEl = document.getElementById('participantsCount');
+  const liveRegEl = document.getElementById('liveReg');
+  const slotsLeftEl = document.getElementById('slotsLeft');
+  const progressFill = document.getElementById('progressFill');
+
+  // preserve expected classes so CSS styling persists
+  if(navRegister && !navRegister.classList.contains('nav-actions-register')) navRegister.classList.add('nav-actions-register');
+  if(navLogin && !navLogin.classList.contains('nav-actions-login')) navLogin.classList.add('nav-actions-login');
+
+  // ---------- helpers ----------
+  function doPulse(el){ if(!el) return; el.classList.add('pulse'); setTimeout(()=> el.classList.remove('pulse'), 420); }
+  function updateCounterUI(count){
+    if(participantsEl) participantsEl.textContent = String(MAX_PARTICIPANTS);
+    if(liveRegEl) liveRegEl.textContent = String(count);
+    const slotsLeft = Math.max(0, MAX_PARTICIPANTS - count);
+    if(slotsLeftEl) slotsLeftEl.textContent = String(slotsLeft);
+    const pct = Math.min(100, Math.round((count / MAX_PARTICIPANTS) * 100));
+    if(progressFill) progressFill.style.width = pct + '%';
+  }
+
+  // ---------- Local fallback counter ----------
+  function startLocalDemoCounter(){
+    function getStoredCount(){ const n = parseInt(localStorage.getItem('cc_reg_count') || '0', 10); return Number.isNaN(n) ? 0 : n; }
+    function setStoredCount(v){ localStorage.setItem('cc_reg_count', String(v)); }
+
+    updateCounterUI(getStoredCount());
+
+    // register button behavior increments once per session then navigates
+    if(navRegister) navRegister.onclick = (e)=>{ doPulse(navRegister); if(sessionStorage.getItem('cc_registered')){ window.location.href='register.html'; return; } let cnt=getStoredCount(); if(cnt>=MAX_PARTICIPANTS) return; cnt++; setStoredCount(cnt); sessionStorage.setItem('cc_registered','1'); updateCounterUI(cnt); window.location.href='register.html'; };
+    if(bigReg) bigReg.onclick = (e)=>{ doPulse(bigReg); if(sessionStorage.getItem('cc_registered')){ window.location.href='register.html'; return; } let cnt=getStoredCount(); if(cnt>=MAX_PARTICIPANTS) return; cnt++; setStoredCount(cnt); sessionStorage.setItem('cc_registered','1'); updateCounterUI(cnt); window.location.href='register.html'; };
+    if(navLogin) navLogin.onclick = (e)=>{ doPulse(navLogin); window.location.href='login.html'; };
+  }
+
+  // ---------- FIREBASE (auth + live counter) ----------
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
+    authDomain: "code-clash-2025.firebaseapp.com",
+    projectId: "code-clash-2025",
+    storageBucket: "code-clash-2025.firebasestorage.app",
+    messagingSenderId: "13717806434",
+    appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
+    measurementId: "G-0BMTHMYMEL"
+  };
+
+  async function startFirebase(){
+    try {
+      const [{ initializeApp }, { getFirestore, collection, onSnapshot }, { getAuth, onAuthStateChanged, signOut }] = await Promise.all([
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js')
+      ]);
+
+      const app = initializeApp(FIREBASE_CONFIG);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+
+      // ---- Live counter (always active) ----
+      onSnapshot(collection(db, 'users'), (snap) => {
+        updateCounterUI(snap.size);
+      }, (err) => {
+        console.error('Firestore snapshot error (counter):', err);
+      });
+
+      // ---- Optimistic welcome placeholder to avoid flicker ----
+      if(welcomeMsg){
+        welcomeMsg.textContent = 'Welcome,';
+        welcomeMsg.style.display = 'block';
+      }
+
+      // ---- Authentication: force token refresh on every auth state event ----
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          // Force-refresh ID token to verify account still exists / is valid.
+          try {
+            // getIdToken(true) forces refresh — will throw if account removed / token invalid
+            await user.getIdToken(true);
+          } catch (tokenErr) {
+            console.warn('Token refresh failed; signing out to clear stale session:', tokenErr);
+            try { await signOut(auth); } catch(e){ console.error('signOut failed', e); }
+            return; // onAuthStateChanged will re-fire with null
+          }
+
+          // If token refresh succeeded, proceed to set logged-in UI.
+          if(navRegister){
+            navRegister.textContent = 'Dashboard';
+            navRegister.onclick = ()=>{ doPulse(navRegister); window.location.href = 'dashboard.html'; };
+          }
+          if(navLogin){
+            navLogin.textContent = 'Logout';
+            navLogin.onclick = async ()=>{
+              doPulse(navLogin);
+              const confirmed = confirm('Are you sure you want to log out?');
+              if(!confirmed) return;
+              try { await signOut(auth); } catch(e){ console.error(e); }
+            };
+          }
+
+          if(bigReg){
+            bigReg.textContent = 'Go to Dashboard';
+            bigReg.onclick = ()=>{ doPulse(bigReg); window.location.href = 'dashboard.html'; };
+          }
+
+          // welcome name (fill in)
+          if(welcomeMsg){
+            const name = user.displayName || user.email || 'Participant';
+            welcomeMsg.textContent = `Welcome, ${name}`;
+            welcomeMsg.style.display = 'block';
+          }
+
+        } else {
+          // Not logged in — revert UI to logged-out state
+          if(navRegister){
+            navRegister.textContent = 'Register';
+            navRegister.onclick = ()=>{ doPulse(navRegister); window.location.href = 'register.html'; };
+          }
+          if(navLogin){
+            navLogin.textContent = 'Login';
+            navLogin.onclick = ()=>{ doPulse(navLogin); window.location.href = 'login.html'; };
+          }
+          if(bigReg){
+            bigReg.textContent = 'Register for Code Clash 2025';
+            bigReg.onclick = ()=>{ doPulse(bigReg); window.location.href = 'register.html'; };
+          }
+          if(welcomeMsg){
+            welcomeMsg.textContent = '';
+            welcomeMsg.style.display = 'none';
+          }
+        }
+      });
+
+    } catch (err) {
+      console.warn('Firebase initialization failed — falling back to local demo behavior:', err);
+      // fallback to local demo if Firebase cannot start
+      startLocalDemoCounter();
+      // ensure nav buttons still do basic navigation if Firebase not available
+      if(navRegister) navRegister.onclick = ()=>{ doPulse(navRegister); window.location.href = 'register.html'; };
+      if(navLogin) navLogin.onclick = ()=>{ doPulse(navLogin); window.location.href = 'login.html'; };
+      if(bigReg) bigReg.onclick = ()=>{ doPulse(bigReg); window.location.href = 'register.html'; };
+    }
+  }
+
+  // ---------- start ----------
+  await startFirebase();
+
+})();
+</script>
+
+</body>
+</html>

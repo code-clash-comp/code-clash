@@ -1,0 +1,256 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
+  authDomain: "code-clash-2025.firebaseapp.com",
+  projectId: "code-clash-2025",
+  storageBucket: "code-clash-2025.firebasestorage.app",
+  messagingSenderId: "13717806434",
+  appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
+  measurementId: "G-0BMTHMYMEL"
+};
+
+
+
+(async function(){
+  // ---------- CONFIG ----------
+  const EVENT_DATE = null;
+  const demoTarget = new Date(Date.now() + 2*60*1000); // 2 min demo
+  const target = EVENT_DATE ? new Date(EVENT_DATE) : demoTarget;
+
+  const MAX_PARTICIPANTS = 32; // fixed maximum as requested
+
+  // Typing phrases (home)
+  const phrases = [
+    'Are you ready to duel?',
+    'Fastest correct solution wins.',
+    '1v1 duels — team points on the line.',
+    'Sharpen your loops. Debug your logic.'
+  ];
+
+  // ---------- TYPING ANIMATION ----------
+  (function typing(){
+    const el = document.getElementById('typingText');
+    if(!el) return;
+    let p = 0, ch = 0, deleting = false;
+    const typingSpeed = 45, pauseAfter = 900;
+    function tick(){
+      const cur = phrases[p];
+      if(!deleting){
+        el.textContent = cur.slice(0, ch+1);
+        ch++;
+        if(ch === cur.length){
+          deleting = true;
+          setTimeout(tick, pauseAfter);
+          return;
+        }
+      } else {
+        el.textContent = cur.slice(0, ch-1);
+        ch--;
+        if(ch === 0){
+          deleting = false;
+          p = (p+1) % phrases.length;
+        }
+      }
+      setTimeout(tick, deleting ? typingSpeed/1.2 : typingSpeed);
+    }
+    tick();
+  })();
+
+  // ---------- COUNTDOWN ----------
+  (function countdown(){
+    const dEl = document.getElementById('cdDays');
+    const hEl = document.getElementById('cdHours');
+    const mEl = document.getElementById('cdMins');
+    const sEl = document.getElementById('cdSecs');
+    if(!dEl || !hEl || !mEl || !sEl) return;
+
+    function update(){
+      const now = Date.now();
+      let diff = target - now;
+      if(diff <= 0){
+        dEl.textContent = '00'; hEl.textContent='00'; mEl.textContent='00'; sEl.textContent='00';
+        return;
+      }
+      const secs = Math.floor(diff / 1000);
+      const days = Math.floor(secs / (3600*24));
+      const hours = Math.floor((secs % (3600*24)) / 3600);
+      const mins = Math.floor((secs % 3600) / 60);
+      const s = secs % 60;
+      dEl.textContent = String(days).padStart(2,'0');
+      hEl.textContent = String(hours).padStart(2,'0');
+      mEl.textContent = String(mins).padStart(2,'0');
+      sEl.textContent = String(s).padStart(2,'0');
+    }
+    update();
+    setInterval(update, 1000);
+  })();
+
+  // ---------- DOM refs for registration UI ----------
+  const navReg = document.getElementById('navRegister');
+  const bigReg = document.getElementById('bigRegister');
+  const loginBtn = document.getElementById('loginBtn');
+  const participantsEl = document.getElementById('participantsCount');
+  const teamsEl = document.getElementById('teamsCount');
+  const liveRegEl = document.getElementById('liveReg');
+  const slotsLeftEl = document.getElementById('slotsLeft');
+  const progressFill = document.getElementById('progressFill');
+
+  // if elements missing, create no-op wrappers to avoid runtime errors
+  function safeEl(el){ return el || { textContent:'', addEventListener(){}, classList:{ add(){}, remove(){}}, disabled:false }; }
+  const _navReg = safeEl(navReg);
+  const _bigReg = safeEl(bigReg);
+  const _loginBtn = safeEl(loginBtn);
+
+  // ---------- UI helpers ----------
+  function updateUIFromCount(count){
+    if(participantsEl) participantsEl.textContent = String(MAX_PARTICIPANTS);
+    if(liveRegEl) liveRegEl.textContent = String(count);
+    const slotsLeft = Math.max(0, MAX_PARTICIPANTS - count);
+    if(slotsLeftEl) slotsLeftEl.textContent = String(slotsLeft);
+    const pct = Math.min(100, Math.round((count / MAX_PARTICIPANTS) * 100));
+    if(progressFill) progressFill.style.width = pct + '%';
+
+    const isFull = count >= MAX_PARTICIPANTS;
+    [navReg, bigReg].forEach(btn=>{
+      if(!btn) return;
+      if(isFull){
+        btn.disabled = true;
+        btn.classList.add('disabled-btn');
+        try{ btn.textContent = (btn === navReg) ? 'Full' : 'Full'; }catch(e){}
+      } else {
+        btn.disabled = false;
+        btn.classList.remove('disabled-btn');
+        try{
+          if(btn === navReg) btn.textContent = 'Register';
+          if(btn === bigReg) btn.textContent = 'Register for Code Clash 2025';
+        }catch(e){}
+      }
+    });
+  }
+
+  function doPulse(el){
+    if(!el) return;
+    el.classList.add('pulse');
+    setTimeout(()=> el.classList.remove('pulse'), 420);
+  }
+
+  // ---------- Local demo counter (fallback) ----------
+  function startLocalDemoCounter(){
+    function getStoredCount(){
+      const n = parseInt(localStorage.getItem('cc_reg_count') || '0', 10);
+      return Number.isNaN(n) ? 0 : n;
+    }
+    function setStoredCount(v){ localStorage.setItem('cc_reg_count', String(v)); }
+
+    // init UI
+    updateUIFromCount(getStoredCount());
+
+    // register behavior: increment once per session
+    function registerClickHandler(e){
+      doPulse(e.currentTarget);
+      if(sessionStorage.getItem('cc_registered')) return;
+      let cnt = getStoredCount();
+      if(cnt >= MAX_PARTICIPANTS) return;
+      cnt = cnt + 1;
+      setStoredCount(cnt);
+      sessionStorage.setItem('cc_registered', '1');
+      updateUIFromCount(cnt);
+    }
+
+    // buttons should both increment in demo mode
+    if(navReg) navReg.addEventListener('click', registerClickHandler);
+    if(bigReg) bigReg.addEventListener('click', registerClickHandler);
+    // login button goes to login page
+    if(loginBtn) loginBtn.addEventListener('click', ()=>{ doPulse(loginBtn); window.location.href = 'login.html'; });
+  }
+
+  // ---------- Firebase-backed live counter & button linking ----------
+  // Provide your Firebase config here to enable real counter. If left with placeholder, script falls back to local demo.
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
+    authDomain: "code-clash-2025.firebaseapp.com",
+    projectId: "code-clash-2025",
+    storageBucket: "code-clash-2025.firebasestorage.app",
+    messagingSenderId: "13717806434",
+    appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
+    measurementId: "G-0BMTHMYMEL"
+  };
+
+  let firebaseAvailable = false;
+  let unsubscribeUsers = null;
+
+  async function startFirebaseLiveCounter(){
+    // dynamic import (modular) so we don't require CLI or bundling
+    try {
+      if(!FIREBASE_CONFIG || !FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.startsWith('YOUR_')){
+        throw new Error('No valid FIREBASE_CONFIG provided');
+      }
+
+      const [{ initializeApp }, { getFirestore, collection, onSnapshot }, { getAuth, onAuthStateChanged }] = await Promise.all([
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js')
+      ]);
+
+      const app = initializeApp(FIREBASE_CONFIG);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+
+      // Realtime listener on users collection (authoritative registration count)
+      const usersCol = collection(db, 'users');
+      unsubscribeUsers = onSnapshot(usersCol, (snap) => {
+        const count = snap.size;
+        updateUIFromCount(count);
+      }, (err) => {
+        console.error('Firestore onSnapshot error:', err);
+        // if firestore subscription errors, fall back to local demo
+        startLocalDemoCounter();
+      });
+
+      // If Firebase available, change register buttons to navigate to register page
+      if(navReg) {
+        navReg.addEventListener('click', (e)=>{ doPulse(navReg); window.location.href = 'register.html'; });
+      }
+      if(bigReg) {
+        bigReg.addEventListener('click', (e)=>{ doPulse(bigReg); window.location.href = 'register.html'; });
+      }
+
+      // login button behavior: show Profile when signed-in, otherwise go to login
+      if(loginBtn){
+        onAuthStateChanged(auth, (user)=>{
+          if(user){
+            try{ loginBtn.textContent = 'Profile'; }catch(e){}
+            loginBtn.addEventListener('click', ()=>{ doPulse(loginBtn); window.location.href = 'dashboard.html'; });
+          } else {
+            try{ loginBtn.textContent = 'Login'; }catch(e){}
+            loginBtn.addEventListener('click', ()=>{ doPulse(loginBtn); window.location.href = 'login.html'; });
+          }
+        });
+      }
+
+      firebaseAvailable = true;
+    } catch(err) {
+      console.warn('Firebase not started (falling back to local counter):', err);
+      startLocalDemoCounter();
+    }
+  }
+
+  // ---------- Start appropriate counter ----------
+  // Try firebase first (if config filled), otherwise fallback automatically
+  await startFirebaseLiveCounter();
+
+  // ---------- keep tiny login pulse behavior regardless (safe) ----------
+  if(loginBtn){
+    // ensure we have a click listener at least to pulse and go to login (if not already overwritten by firebase auth listener)
+    loginBtn.addEventListener('click', ()=>{ doPulse(loginBtn); /* target handled above */ });
+  }
+
+  // Expose helper for server-sync/testing
+  window.updateRegistrationsFromServer = (num)=>{
+    if(typeof num === 'number' && num >= 0){
+      updateUIFromCount(Math.min(num, MAX_PARTICIPANTS));
+    }
+  };
+
+})();
+
+</script>
