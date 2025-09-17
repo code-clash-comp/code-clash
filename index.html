@@ -90,9 +90,7 @@
 <script type="module">
 (async function(){
   // ---------- CONFIG ----------
-  const EVENT_DATE = null;
-  const demoTarget = new Date(Date.now() + 2*60*1000); // demo target
-  const target = EVENT_DATE ? new Date(EVENT_DATE) : demoTarget;
+  const target = new Date('2025-10-17').getTime();
   const MAX_PARTICIPANTS = 32;
 
   const phrases = [
@@ -223,12 +221,25 @@
       const db = getFirestore(app);
       const auth = getAuth(app);
 
-      // ---- Live counter (always active) ----
       onSnapshot(collection(db, 'users'), (snap) => {
-        updateCounterUI(snap.size);
+        try {
+          // Map docs -> data objects
+          const docs = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+
+          // Count only *non-admin* users (exclude isAdmin / isSuperAdmin)
+          const nonAdminCount = docs.filter(u => !u.isAdmin && !u.isSuperAdmin).length;
+          
+          // Update UI using only non-admin participants
+          updateCounterUI(nonAdminCount);
+        } catch (err) {
+          console.error('Error counting participants (filtered):', err);
+          // fallback to showing the snapshot size to avoid breaking UI
+          updateCounterUI(snap.size);
+        }
       }, (err) => {
         console.error('Firestore snapshot error (counter):', err);
       });
+
 
       // ---- Optimistic welcome placeholder to avoid flicker ----
       if(welcomeMsg){

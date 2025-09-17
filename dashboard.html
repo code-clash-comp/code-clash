@@ -79,156 +79,159 @@
   </style>
 </head>
 <body>
-  <div class="nav">
-    <div class="nav-name">
-      <h1 class="nav-name-title">&lt;/&gt; Code Clash 2025</h1>
+  <div class="page-container">
+    <div class="nav">
+      <div class="nav-name">
+        <h1 class="nav-name-title">&lt;/&gt; Code Clash 2025</h1>
+      </div>
+
+      <div class="nav-actions">
+        <button class="nav-actions-register" id="navRegister">Home</button>
+        <button class="nav-actions-login" id="navLogin">Login</button>
+      </div>
     </div>
 
-    <div class="nav-actions">
-      <button class="nav-actions-register" id="navRegister">Home</button>
-      <button class="nav-actions-login" id="navLogin">Login</button>
-    </div>
-  </div>
+    <header class="dashboard-header container">
+      <h2 class="page-title">Dashboard</h2>
+      <div class="typing-line" style="margin-top:8px;">
+        <span id="typingDashboard" class="typing-text"></span><span class="cursor" aria-hidden="true"></span>
+      </div>
+    </header>
 
-  <header class="dashboard-header container">
-    <h2 class="page-title">Dashboard</h2>
-    <div class="typing-line" style="margin-top:8px;">
-      <span id="typingDashboard" class="typing-text"></span><span class="cursor" aria-hidden="true"></span>
-    </div>
-  </header>
+    <main class="container" style="margin-top:18px;">
+      <section class="panel profile-panel">
+        <div class="panel-title">Your Profile</div>
+        <div id="profileLoggedOut" class="small muted" style="margin-top:8px">Please <a href="login.html">login</a> to see and edit your profile.</div>
 
-  <main class="container" style="margin-top:18px;">
-    <section class="panel profile-panel">
-      <div class="panel-title">Your Profile</div>
-      <div id="profileLoggedOut" class="small muted" style="margin-top:8px">Please <a href="login.html">login</a> to see and edit your profile.</div>
-
-      <div id="profileCard" style="margin-top:10px; display:none">
-        <div class="mini-grid">
-          <div class="mini-card" id="card-name">
-            <div class="mini-head">
-              <div class="mini-title">Name</div>
-              <button class="mini-edit" data-field="name" title="Edit name">✏️</button>
+        <div id="profileCard" style="margin-top:10px; display:none">
+          <div class="mini-grid">
+            <div class="mini-card" id="card-name">
+              <div class="mini-head">
+                <div class="mini-title">Name</div>
+                <button class="mini-edit" data-field="name" title="Edit name">✏️</button>
+              </div>
+              <div class="mini-body">
+                <div class="mini-value" id="val-name">-</div>
+                <div class="mini-edit-area" id="edit-name" style="display:none">
+                  <input id="inp-name-mini" type="text" placeholder="Full name" />
+                  <div class="mini-actions">
+                    <button class="btn mini-save" data-field="name">Save</button>
+                    <button class="btn mini-cancel" data-field="name">Cancel</button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="mini-body">
-              <div class="mini-value" id="val-name">-</div>
-              <div class="mini-edit-area" id="edit-name" style="display:none">
-                <input id="inp-name-mini" type="text" placeholder="Full name" />
-                <div class="mini-actions">
-                  <button class="btn mini-save" data-field="name">Save</button>
-                  <button class="btn mini-cancel" data-field="name">Cancel</button>
+
+            <div class="mini-card" id="card-grade">
+              <div class="mini-head">
+                <div class="mini-title">Grade &amp; Section</div>
+                <button class="mini-edit" data-field="grade" title="Edit grade/section">✏️</button>
+              </div>
+              <div class="mini-body">
+                <div class="mini-value" id="val-grade">-</div>
+                <div class="mini-edit-area" id="edit-grade" style="display:none">
+                  <input id="inp-grade-mini" type="text" placeholder="Grade & Section" />
+                  <div class="mini-actions">
+                    <button class="btn mini-save" data-field="grade">Save</button>
+                    <button class="btn mini-cancel" data-field="grade">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mini-card" id="card-phone">
+              <div class="mini-head">
+                <div class="mini-title">Phone</div>
+                <button class="mini-edit" data-field="phone" title="Edit phone">✏️</button>
+              </div>
+              <div class="mini-body">
+                <div class="mini-value" id="val-phone">-</div>
+                <div class="mini-edit-area" id="edit-phone" style="display:none">
+                  <input id="inp-phone-mini" type="tel" placeholder="Phone number" />
+                  <div class="mini-actions">
+                    <button class="btn mini-save" data-field="phone">Save</button>
+                    <button class="btn mini-cancel" data-field="phone">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mini-card" id="card-email">
+              <div class="mini-head">
+                <div class="mini-title">Email</div>
+                <button class="mini-edit" data-field="email" title="Edit email">✏️</button>
+              </div>
+              <div class="mini-body">
+                <div class="mini-value" id="val-email">-</div>
+                <div class="mini-edit-area" id="edit-email" style="display:none">
+                  <input id="inp-email-mini" type="email" placeholder="Email" />
+                  <div class="mini-actions">
+                    <button class="btn mini-save" data-field="email">Save</button>
+                    <button class="btn mini-cancel" data-field="email">Cancel</button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="mini-card" id="card-grade">
-            <div class="mini-head">
-              <div class="mini-title">Grade &amp; Section</div>
-              <button class="mini-edit" data-field="grade" title="Edit grade/section">✏️</button>
-            </div>
-            <div class="mini-body">
-              <div class="mini-value" id="val-grade">-</div>
-              <div class="mini-edit-area" id="edit-grade" style="display:none">
-                <input id="inp-grade-mini" type="text" placeholder="Grade & Section" />
-                <div class="mini-actions">
-                  <button class="btn mini-save" data-field="grade">Save</button>
-                  <button class="btn mini-cancel" data-field="grade">Cancel</button>
-                </div>
-              </div>
-            </div>
+          <div id="teamBadgeWrap" style="margin-top:12px; display:none">
+            <div class="small muted">Your team</div>
+            <div id="teamBadge" class="team-badge" role="button" tabindex="0" title="Click to view your team"></div>
           </div>
 
-          <div class="mini-card" id="card-phone">
-            <div class="mini-head">
-              <div class="mini-title">Phone</div>
-              <button class="mini-edit" data-field="phone" title="Edit phone">✏️</button>
-            </div>
-            <div class="mini-body">
-              <div class="mini-value" id="val-phone">-</div>
-              <div class="mini-edit-area" id="edit-phone" style="display:none">
-                <input id="inp-phone-mini" type="tel" placeholder="Phone number" />
-                <div class="mini-actions">
-                  <button class="btn mini-save" data-field="phone">Save</button>
-                  <button class="btn mini-cancel" data-field="phone">Cancel</button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div id="profileMsg" class="small muted" style="margin-top:10px; min-height:18px"></div>
+        </div>
+      </section>
 
-          <div class="mini-card" id="card-email">
-            <div class="mini-head">
-              <div class="mini-title">Email</div>
-              <button class="mini-edit" data-field="email" title="Edit email">✏️</button>
-            </div>
-            <div class="mini-body">
-              <div class="mini-value" id="val-email">-</div>
-              <div class="mini-edit-area" id="edit-email" style="display:none">
-                <input id="inp-email-mini" type="email" placeholder="Email" />
-                <div class="mini-actions">
-                  <button class="btn mini-save" data-field="email">Save</button>
-                  <button class="btn mini-cancel" data-field="email">Cancel</button>
-                </div>
-              </div>
-            </div>
-          </div>
+      <section class="panel teams-panel" style="margin-top:12px;">
+        <div class="panel-title">Teams</div>
+        <div class="small muted">Create or join a team. Max 8 teams total.</div>
+
+        <div class="teams-controls" style="margin-top:12px; display:flex; gap:10px;">
+          <button id="createTeamBtn" class="btn primary">Create Team</button>
+          <button id="refreshBtn" class="btn">Refresh</button>
         </div>
 
-        <div id="teamBadgeWrap" style="margin-top:12px; display:none">
-          <div class="small muted">Your team</div>
-          <div id="teamBadge" class="team-badge" role="button" tabindex="0" title="Click to view your team"></div>
+        <div id="teamsList" class="teams-list" style="margin-top:12px"></div>
+        <div id="teamNote" class="small muted" style="margin-top:10px"></div>
+      </section>
+    </main>
+
+    <main class="container" style="margin-top:18px; margin-bottom:40px;">
+      <section class="panel">
+        <div class="panel-title">Competition Details</div>
+        <div id="compDetails" class="small muted" style="margin-top:8px">
+          <strong>Format:</strong> 1v1 duels, teams earn points.<br>
+          <strong>Participants max:</strong> <span id="cMax">32</span><br>
+          <strong>Teams max:</strong> 8<br>
+          <strong>Team size limit:</strong> <span id="teamLimitDisplay">4</span><br>
+          <strong>Rules:</strong> Be respectful. Follow time limits. No plagiarism.
+        </div>
+      </section>
+    </main>
+
+    <footer class="page-foot muted-no-margin">Hosted on GitHub Pages · Good luck and have fun!</footer>
+
+    <div id="createTeamModal" class="modal" aria-hidden="true">
+      <div class="modal-panel">
+        <h3 style="margin:0 0 8px 0;color:var(--accent)">Create a Team</h3>
+        <label class="pf-label">Team name
+          <input id="modalTeamName" type="text" placeholder="Short team name" />
+        </label>
+        <div style="margin-top:8px;">
+          <div class="pf-label">Pick a team color</div>
+          <div id="colorOptions" class="color-grid" style="margin-top:8px"></div>
         </div>
 
-        <div id="profileMsg" class="small muted" style="margin-top:10px; min-height:18px"></div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button id="modalCreateBtn" class="btn primary">Create</button>
+          <button id="modalCancelBtn" class="btn">Cancel</button>
+        </div>
+        <div id="modalMsg" class="small muted" style="margin-top:8px; min-height:18px"></div>
       </div>
-    </section>
-
-    <section class="panel teams-panel" style="margin-top:12px;">
-      <div class="panel-title">Teams</div>
-      <div class="small muted">Create or join a team. Max 8 teams total.</div>
-
-      <div class="teams-controls" style="margin-top:12px; display:flex; gap:10px;">
-        <button id="createTeamBtn" class="btn primary">Create Team</button>
-        <button id="refreshBtn" class="btn">Refresh</button>
-      </div>
-
-      <div id="teamsList" class="teams-list" style="margin-top:12px"></div>
-      <div id="teamNote" class="small muted" style="margin-top:10px"></div>
-    </section>
-  </main>
-
-  <main class="container" style="margin-top:18px; margin-bottom:40px;">
-    <section class="panel">
-      <div class="panel-title">Competition Details</div>
-      <div id="compDetails" class="small muted" style="margin-top:8px">
-        <strong>Format:</strong> 1v1 duels, teams earn points.<br>
-        <strong>Participants max:</strong> <span id="cMax">32</span><br>
-        <strong>Teams max:</strong> 8<br>
-        <strong>Team size limit:</strong> <span id="teamLimitDisplay">4</span><br>
-        <strong>Rules:</strong> Be respectful. Follow time limits. No plagiarism.
-      </div>
-    </section>
-  </main>
-
-  <footer class="page-foot muted">Hosted on GitHub Pages · Good luck and have fun!</footer>
-
-  <div id="createTeamModal" class="modal" aria-hidden="true">
-    <div class="modal-panel">
-      <h3 style="margin:0 0 8px 0;color:var(--accent)">Create a Team</h3>
-      <label class="pf-label">Team name
-        <input id="modalTeamName" type="text" placeholder="Short team name" />
-      </label>
-      <div style="margin-top:8px;">
-        <div class="pf-label">Pick a team color</div>
-        <div id="colorOptions" class="color-grid" style="margin-top:8px"></div>
-      </div>
-
-      <div style="display:flex; gap:8px; margin-top:12px;">
-        <button id="modalCreateBtn" class="btn primary">Create</button>
-        <button id="modalCancelBtn" class="btn">Cancel</button>
-      </div>
-      <div id="modalMsg" class="small muted" style="margin-top:8px; min-height:18px"></div>
+      <div class="modal-backdrop"></div>
     </div>
-    <div class="modal-backdrop"></div>
+
   </div>
 
 <script type="module">

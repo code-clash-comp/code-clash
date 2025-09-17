@@ -131,6 +131,7 @@ button, input {
 .typebox{ flex:1; color:var(--accent) }
 .big{ font-size:26px; margin:0; color:var(--accent) }
 .muted{ color:var(--muted); margin-top:8px; font-size:13px }
+.muted-no-margin{ color:var(--muted); font-size:13px }
 
 /* HERO TITLE (big centerpiece) */
 .hero-title{
@@ -208,7 +209,7 @@ button, input {
 .hidden{ display:none; }
 
 /* footer */
-.page-foot{ padding:12px 24px; color:var(--muted); font-size:13px; border-top:1px solid rgba(143, 212, 155, 0.181); text-align:center }
+.page-foot{ padding:12px 24px; color:var(--muted); font-size:13px; border-top:1px solid rgba(143, 212, 155, 0.181); text-align:center; }
 
 /* small responsive */
 @media (max-width:900px){
@@ -246,3 +247,14 @@ button, input {
 
 /* small slots-left text */
 .slots-left{ color: var(--muted); font-size:13px; }
+
+footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #161616;
+  color: #eee;
+  text-align: center;
+  padding: 15px 10px;
+  font-size: 14px;
+}
