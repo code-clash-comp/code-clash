@@ -76,6 +76,27 @@
   box-shadow: 0 8px 20px rgba(0,0,0,0.45);
 }
 
+/* Delete button style: destructive but matching theme */
+.btn.destructive {
+  background: transparent;
+  border: 1px solid rgba(246,166,166,0.12);
+  color: #f6a6a6;
+}
+
+/* visually disable interactive team area for admins */
+.disabled-block {
+  opacity: 0.52;
+  pointer-events: none; /* prevents clicks */
+  filter: grayscale(0.15);
+  transition: opacity .18s ease, filter .18s ease;
+}
+/* subtle callout shown when area disabled */
+.admin-disabled-note {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
   </style>
 </head>
 <body>
@@ -86,6 +107,7 @@
       </div>
 
       <div class="nav-actions">
+        <button id="navAdmin" class="nav-actions-admin" style="display:none;">Admin Panel</button>
         <button class="nav-actions-register" id="navRegister">Home</button>
         <button class="nav-actions-login" id="navLogin">Login</button>
       </div>
@@ -180,6 +202,11 @@
           </div>
 
           <div id="profileMsg" class="small muted" style="margin-top:10px; min-height:18px"></div>
+
+          <!-- DELETE ACCOUNT BUTTON -->
+          <div style="margin-top:12px;">
+            <button id="deleteAccountBtn" class="btn destructive" title="Permanently delete your account and profile">Delete account</button>
+          </div>
         </div>
       </section>
 
@@ -290,6 +317,7 @@
   // DOM refs + nav fix
   const navRegister = document.getElementById('navRegister');
   const navLogin = document.getElementById('navLogin');
+  const navAdmin = document.getElementById('navAdmin'); // admin quick link
   navRegister.onclick = ()=> { window.location.href = '/code-clash/'; };
 
   const valName = document.getElementById('val-name');
@@ -318,6 +346,7 @@
   const profileLoggedOut = document.getElementById('profileLoggedOut');
   const profileCard = document.getElementById('profileCard');
   const profileMsg = document.getElementById('profileMsg');
+  const deleteAccountBtn = document.getElementById('deleteAccountBtn');
 
   const createTeamModal = document.getElementById('createTeamModal');
   const modalTeamName = document.getElementById('modalTeamName');
@@ -328,8 +357,8 @@
 
   const [
     { initializeApp },
-    { getFirestore, collection, doc, updateDoc, addDoc, onSnapshot, arrayUnion, arrayRemove, deleteDoc, runTransaction },
-    { getAuth, onAuthStateChanged, updateProfile, updateEmail, signOut }
+    { getFirestore, collection, doc, updateDoc, addDoc, onSnapshot, arrayUnion, arrayRemove, deleteDoc, runTransaction, getDoc },
+    { getAuth, onAuthStateChanged, updateProfile, updateEmail, signOut, deleteUser }
   ] = await Promise.all([
     import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
     import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
@@ -698,7 +727,8 @@ function renderColorOptions(){
       modalMsg.style.color = '#f6a6a6'; modalMsg.textContent = 'That color is already used. Pick another.'; renderColorOptions(); return;
     }
     const already = allTeams.find(t => (t.members||[]).includes(currentUser.uid));
-    if(already){ modalMsg.style.color='#f6a6a6'; modalMsg.textContent = 'You are already in a team.'; return; }
+    if(already){ modalMsg.style.color='#f6a6a6'; modalMsg.textContent = 'You are already in a team.'; return;
+    }
     if(allTeams.length >= MAX_TEAMS){ modalMsg.style.color='#f6a6a6'; modalMsg.textContent = 'Team cap reached.'; return; }
     modalCreateBtn.disabled = true; modalCreateBtn.textContent = 'Creating...';
     try{
@@ -736,6 +766,44 @@ function renderColorOptions(){
       if(navLogin){ navLogin.textContent='Login'; navLogin.onclick = ()=> window.location.href='login.html'; }
     }
     updateCreateButtonState();
+
+    // New: check admin status and show admin link (preferred via claims, fallback to users doc)
+    (async ()=>{
+      try {
+        if(!user){
+          if(navAdmin) navAdmin.style.display = 'none';
+          return;
+        }
+        // preferred: check custom claims
+        let claimsOk = false;
+        try {
+          const idRes = await user.getIdTokenResult();
+          const claims = idRes.claims || {};
+          if(claims.admin || claims.isAdmin || claims.superAdmin || claims.isSuperAdmin) claimsOk = true;
+        } catch(e){ console.warn('getIdTokenResult failed when checking claims:', e); }
+
+        if(!claimsOk){
+          // fallback: read users/{uid}
+          try {
+            const udoc = await getDoc(doc(db,'users', user.uid));
+            const data = udoc.exists() ? udoc.data() : {};
+            if(data.isAdmin || data.isSuperAdmin) claimsOk = true;
+          } catch(e){ console.warn('fallback user doc admin check failed:', e); }
+        }
+
+        if(claimsOk){
+          if(navAdmin){
+            navAdmin.style.display = 'inline-block';
+            navAdmin.onclick = ()=> { window.location.href = 'admin.html'; };
+          }
+        } else {
+          if(navAdmin) navAdmin.style.display = 'none';
+        }
+      } catch(e){
+        console.error('admin button check failed', e);
+        if(navAdmin) navAdmin.style.display = 'none';
+      }
+    })();
   });
 
   function startUserListener(uid){
@@ -747,6 +815,76 @@ function renderColorOptions(){
       }, err => console.error('user doc err', err));
     } catch(e){ console.error('startUserListener', e); }
   }
+
+  // DELETE ACCOUNT LOGIC
+  deleteAccountBtn.addEventListener('click', async () => {
+    if(!currentUser) { alert('You must be logged in to delete your account.'); return; }
+    if(!confirm('Delete your account? This is permanent and will remove your profile and remove you from any teams.')) return;
+
+    try {
+      const uid = currentUser.uid;
+
+      // 1) find teams where the user is a member
+      const myTeams = (allTeams || []).filter(t => (t.members || []).includes(uid));
+
+      // 2) If user is captain of a team with other members, block delete and instruct to transfer/disband
+      const captainWithOthers = myTeams.find(t => t.captainUid === uid && (t.members?.length || 0) > 1);
+      if(captainWithOthers){
+        alert(`You're captain of "${captainWithOthers.name}" which still has other members. Transfer the captain role or disband the team before deleting your account.`);
+        return;
+      }
+
+      // Confirm final
+      if(!confirm('Final confirmation: permanently delete account now?')) return;
+
+      // 3) Attempt to delete Auth account first (may require recent login)
+      try {
+        await deleteUser(currentUser);
+      } catch(authErr){
+        console.error('deleteUser failed', authErr);
+        // common case: requires recent login
+        if(authErr && authErr.code === 'auth/requires-recent-login'){
+          alert('Deletion requires recent login. Please sign out and sign in again (or re-authenticate), then try deleting your account.');
+          return;
+        } else {
+          alert('Failed to delete account from Authentication. See console for details.');
+          return;
+        }
+      }
+
+      // 4) After auth deletion succeeded, clean up Firestore:
+      // - If user is sole member & captain: delete team doc
+      // - Otherwise remove uid from members arrays
+      for(const t of myTeams){
+        const members = t.members || [];
+        const isCaptain = t.captainUid === uid;
+        if(isCaptain && members.length <= 1){
+          // delete team (sole member)
+          try { await deleteDoc(doc(db,'teams',t.id)); } catch(e){ console.warn('failed to delete team', t.id, e); }
+        } else {
+          // remove from members
+          try { await updateDoc(doc(db,'teams',t.id), { members: arrayRemove(uid) }); } catch(e){ console.warn('failed to remove member from team', t.id, e); }
+          // if they were captain but other members already removed (shouldn't happen due to check) — no action
+        }
+      }
+
+      // 5) delete user's Firestore doc
+      try {
+        await deleteDoc(doc(db, 'users', uid));
+      } catch(e){
+        console.warn('failed to delete user doc', e);
+      }
+
+      // 6) sign out and redirect to home
+      try { await signOut(auth); } catch(e){ /* ignore */ }
+      alert('Account deleted. Redirecting home.');
+      window.location.href = '/code-clash/';
+
+    } catch(e){
+      console.error('delete flow failed', e);
+      alert('Something went wrong while deleting account. Check console and try again.');
+    }
+  });
 
   // ensure UI starts in a consistent state
   showAllMiniValues();

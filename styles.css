@@ -64,6 +64,23 @@ button, input {
   border-color:#fff;
 }
 
+.nav-actions-admin {
+  font-size: 14px;
+  font-weight: 700;
+  background: rgba(180,120,255,0.06);
+  cursor: pointer;
+  border-radius:6px;
+  height: 36px;
+  width: 120px;
+  color: rgb(205, 164, 255); 
+  border: 2px solid rgba(181, 120, 255, 0.828);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.nav-actions-admin:hover {
+  color:#fff;
+  border-color:#fff;
+}
+
 .nav-actions-register {
   border: none;
   color: var(--bg);

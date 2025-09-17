@@ -13,11 +13,10 @@
       <h1 class="nav-name-title">&lt;/&gt; Code Clash 2025</h1>
     </div>
 
-    <div class="nav-actions">      
+    <div class="nav-actions">
+      <button id="navDashboard" style="display:none;" class="nav-actions-admin">Admin Panel</button>
       <button class="nav-actions-register" id="navRegister">Register</button>
       <button class="nav-actions-login" id="navLogin">Login</button>
-      <button id="navDashboard" style="display:none;">Dashboard</button>
-      <button id="navLogout" style="display:none;">Logout</button>
     </div>
   </div>
 
@@ -90,7 +89,7 @@
 <script type="module">
 (async function(){
   // ---------- CONFIG ----------
-  const target = new Date('2025-10-17').getTime();
+  const target = new Date('2025-10-18T11:00:00').getTime();
   const MAX_PARTICIPANTS = 32;
 
   const phrases = [
@@ -160,8 +159,7 @@
   // ---------- DOM refs ----------
   const navLogin = document.getElementById('navLogin');
   const navRegister = document.getElementById('navRegister');
-  const navDashboard = document.getElementById('navDashboard'); // hidden in HTML, kept for compatibility
-  const navLogout = document.getElementById('navLogout');     // hidden in HTML, kept for compatibility
+  const navDashboard = document.getElementById('navDashboard'); // admin button (hidden by default)
   const bigReg = document.getElementById('bigRegister');
   const welcomeMsg = document.getElementById('welcomeMsg');
 
@@ -198,7 +196,7 @@
     if(navLogin) navLogin.onclick = (e)=>{ doPulse(navLogin); window.location.href='login.html'; };
   }
 
-  // ---------- FIREBASE (auth + live counter) ----------
+  // ---------- FIREBASE (auth + live counter + admin button) ----------
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
     authDomain: "code-clash-2025.firebaseapp.com",
@@ -211,7 +209,7 @@
 
   async function startFirebase(){
     try {
-      const [{ initializeApp }, { getFirestore, collection, onSnapshot }, { getAuth, onAuthStateChanged, signOut }] = await Promise.all([
+      const [{ initializeApp }, { getFirestore, collection, onSnapshot, doc, getDoc }, { getAuth, onAuthStateChanged, signOut }] = await Promise.all([
         import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
         import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
         import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js')
@@ -221,25 +219,41 @@
       const db = getFirestore(app);
       const auth = getAuth(app);
 
+      // show/hide admin button helper
+      async function resolveAdminForUser(user){
+        if(!user) return false;
+        // preferred: custom claims
+        try {
+          const idRes = await user.getIdTokenResult();
+          const claims = idRes.claims || {};
+          if(claims.admin || claims.isAdmin || claims.superAdmin || claims.isSuperAdmin) return true;
+        } catch(e){
+          console.warn('getIdTokenResult failed when checking claims:', e);
+        }
+        // fallback: users/{uid} doc fields
+        try {
+          const udoc = await getDoc(doc(db, 'users', user.uid));
+          const data = udoc.exists() ? udoc.data() : {};
+          if(data.isAdmin || data.isSuperAdmin) return true;
+        } catch(e){
+          console.warn('fallback user doc admin check failed:', e);
+        }
+        return false;
+      }
+
+      // live participant counter (exclude admins/superAdmin)
       onSnapshot(collection(db, 'users'), (snap) => {
         try {
-          // Map docs -> data objects
-          const docs = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
-
-          // Count only *non-admin* users (exclude isAdmin / isSuperAdmin)
+          const docs = snap.docs.map(d => ({ uid: d.id, ...(d.data()||{}) }));
           const nonAdminCount = docs.filter(u => !u.isAdmin && !u.isSuperAdmin).length;
-          
-          // Update UI using only non-admin participants
           updateCounterUI(nonAdminCount);
         } catch (err) {
           console.error('Error counting participants (filtered):', err);
-          // fallback to showing the snapshot size to avoid breaking UI
           updateCounterUI(snap.size);
         }
       }, (err) => {
         console.error('Firestore snapshot error (counter):', err);
       });
-
 
       // ---- Optimistic welcome placeholder to avoid flicker ----
       if(welcomeMsg){
@@ -247,48 +261,56 @@
         welcomeMsg.style.display = 'block';
       }
 
-      // ---- Authentication: force token refresh on every auth state event ----
+      // onAuthStateChanged: update UI + admin button visibility
       onAuthStateChanged(auth, async (user) => {
         if (user) {
-          // Force-refresh ID token to verify account still exists / is valid.
+          // Force-refresh ID token to verify validity
           try {
-            // getIdToken(true) forces refresh — will throw if account removed / token invalid
             await user.getIdToken(true);
           } catch (tokenErr) {
             console.warn('Token refresh failed; signing out to clear stale session:', tokenErr);
             try { await signOut(auth); } catch(e){ console.error('signOut failed', e); }
-            return; // onAuthStateChanged will re-fire with null
+            return;
           }
 
-          // If token refresh succeeded, proceed to set logged-in UI.
+          // update basic auth UI
           if(navRegister){
             navRegister.textContent = 'Dashboard';
             navRegister.onclick = ()=>{ doPulse(navRegister); window.location.href = 'dashboard.html'; };
           }
           if(navLogin){
             navLogin.textContent = 'Logout';
-            navLogin.onclick = async ()=>{
+            navLogin.onclick = async ()=> {
               doPulse(navLogin);
               const confirmed = confirm('Are you sure you want to log out?');
               if(!confirmed) return;
               try { await signOut(auth); } catch(e){ console.error(e); }
             };
           }
-
           if(bigReg){
             bigReg.textContent = 'Go to Dashboard';
             bigReg.onclick = ()=>{ doPulse(bigReg); window.location.href = 'dashboard.html'; };
           }
 
-          // welcome name (fill in)
+          // welcome name
           if(welcomeMsg){
             const name = user.displayName || user.email || 'Participant';
             welcomeMsg.textContent = `Welcome, ${name}`;
             welcomeMsg.style.display = 'block';
           }
 
+          // check admin claims / doc, show admin button if allowed
+          const isAdminUser = await resolveAdminForUser(user);
+          if(isAdminUser && navDashboard){
+            navDashboard.style.display = 'inline-block';
+            navDashboard.onclick = ()=> { doPulse(navDashboard); window.location.href = 'admin.html'; };
+          } else if(navDashboard) {
+            navDashboard.style.display = 'none';
+            navDashboard.onclick = null;
+          }
+
         } else {
-          // Not logged in — revert UI to logged-out state
+          // not logged in: revert to logged-out UI
           if(navRegister){
             navRegister.textContent = 'Register';
             navRegister.onclick = ()=>{ doPulse(navRegister); window.location.href = 'register.html'; };
@@ -305,6 +327,7 @@
             welcomeMsg.textContent = '';
             welcomeMsg.style.display = 'none';
           }
+          if(navDashboard) navDashboard.style.display = 'none';
         }
       });
 
@@ -312,10 +335,11 @@
       console.warn('Firebase initialization failed — falling back to local demo behavior:', err);
       // fallback to local demo if Firebase cannot start
       startLocalDemoCounter();
-      // ensure nav buttons still do basic navigation if Firebase not available
+      // basic nav behavior when Firebase unavailable
       if(navRegister) navRegister.onclick = ()=>{ doPulse(navRegister); window.location.href = 'register.html'; };
       if(navLogin) navLogin.onclick = ()=>{ doPulse(navLogin); window.location.href = 'login.html'; };
       if(bigReg) bigReg.onclick = ()=>{ doPulse(bigReg); window.location.href = 'register.html'; };
+      if(navDashboard) navDashboard.style.display = 'none';
     }
   }
 

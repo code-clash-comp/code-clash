@@ -14,15 +14,15 @@
     .admin-title { margin:0; font-family:var(--mono); color:var(--accent); font-size:26px; }
     .admin-sub { color:var(--muted); font-size:13px; margin-top:4px; }
 
-    /* stats + search row: compact, with search on right (original position preserved) */
+    /* stats row aligned in one line */
     .stats-search-row {
       display:flex;
-      gap:12px;
       align-items:center;
       justify-content:space-between;
       margin-top:6px;
       width:100%;
       flex-wrap:wrap;
+      gap:12px;
     }
 
     .left-stats {
@@ -48,18 +48,8 @@
     .stat-label { color: var(--accent); font-weight:700; font-size:13px; letter-spacing:0.2px; }
     .stat-value { color: #ffffff; font-weight:900; font-size:18px; }
 
-    /* second row below stats for controls (CSV + toggle + optionally extra) */
-    .controls-row {
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:flex-end;
-      margin-top:10px;
-      width:100%;
-      flex-wrap:wrap;
-    }
-
-    .mid-controls { display:flex; gap:12px; align-items:center; }
+    /* mid controls */
+    .mid-controls { display:flex; gap:10px; align-items:center; }
 
     /* CSV button */
     .csv-btn {
@@ -70,60 +60,46 @@
       color:var(--accent);
       font-family:var(--mono);
       cursor:pointer;
-      transition: all 0.18s cubic-bezier(.2,.9,.2,1);
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      font-weight:800;
-    }
-    .csv-btn .icon {
-      transform: translateY(0);
-      transition: transform .18s ease;
+      transition: all 0.2s ease;
     }
     .csv-btn:hover {
       background: var(--accent);
-      color:#0b0b0b;
-      transform: translateY(-3px);
-      box-shadow: 0 8px 28px rgba(127,191,127,0.18);
+      color:#111;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(127,191,127,0.3);
     }
-    .csv-btn:active { transform: translateY(-1px); }
-    .csv-btn:hover .icon { transform: translateY(-2px); }
 
-    /* toggle styled inline (small pill) */
-    .toggle-pill {
-      display:inline-flex;
-      gap:10px;
+    /* switch styled inline */
+    .toggle-switch {
+      display:flex;
       align-items:center;
-      background: rgba(255,255,255,0.01);
-      border-radius:999px;
-      padding:6px 10px;
-      border:1px solid rgba(255,255,255,0.03);
-      color:var(--muted);
-      font-size:13px;
-    }
-    .toggle {
-      position:relative;
-      width:42px;
-      height:24px;
-      background:#333;
-      border-radius:999px;
+      gap:6px;
       cursor:pointer;
-      flex: 0 0 auto;
+      font-size:13px;
+      user-select:none;
     }
-    .toggle-knob {
+    .toggle-switch input {
+      appearance:none;
+      width:36px; height:18px;
+      background:#444;
+      border-radius:20px;
+      position:relative;
+      outline:none;
+      transition: background 0.2s ease;
+    }
+    .toggle-switch input:checked { background: var(--accent); }
+    .toggle-switch input::after {
+      content:"";
       position:absolute;
-      top:3px;
-      left:3px;
-      width:18px;
-      height:18px;
+      width:14px; height:14px;
+      top:2px; left:2px;
+      background:white;
       border-radius:50%;
-      background:#fff;
-      transition: transform .18s ease, left .18s ease;
+      transition: transform 0.2s ease;
     }
-    .toggle.on { background: var(--accent); }
-    .toggle.on .toggle-knob { transform: translateX(18px); }
+    .toggle-switch input:checked::after { transform: translateX(18px); }
 
-    /* right-side search block (kept where you had it) */
+    /* search */
     .search-block {
       display:flex;
       align-items:center;
@@ -134,8 +110,6 @@
       border-radius:12px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.45);
     }
-
-    /* input with integrated icon */
     .search {
       background: transparent;
       border: none;
@@ -143,14 +117,11 @@
       border-radius:8px;
       color:#e8f6e8;
       font-family:var(--mono);
-      min-width:260px;
+      min-width:240px;
       outline:none;
-      position:relative;
     }
     .search::placeholder{ color: rgba(230,240,230,0.5); }
-    .search:focus { box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 10px rgba(127,191,127,0.03) inset; }
 
-    /* search icon (CSS) */
     .search-icon {
       position:relative;
       width:28px;
@@ -165,8 +136,7 @@
       pointer-events:none;
     }
 
-    .top-actions { display:flex; gap:8px; align-items:center; }
-
+    /* table */
     .admin-table { width:100%; border-collapse:collapse; margin-top:12px; border-radius:8px; overflow:hidden; }
     .admin-table thead tr { background: linear-gradient(90deg, rgba(127,191,127,0.06), rgba(95,160,95,0.03)); }
     .admin-table th, .admin-table td {
@@ -178,19 +148,10 @@
     }
     .admin-table th { color: var(--accent); font-weight:700; font-size:13px; }
     .small-muted { color: var(--muted); font-size:12px; }
-    .role-badge { padding:6px 8px; border-radius:8px; font-weight:700; font-size:12px; display:inline-block; min-width:72px; text-align:center; }
-    .badge-admin { background: rgba(255,255,255,0.02); color: var(--accent); border:1px solid rgba(143,217,155,0.04); }
-    .badge-super { background: rgba(180,120,255,0.06); color: #c7b7ff; border:1px solid rgba(180,120,255,0.06); }
-    .table-actions button { margin-left:6px; }
-    .note { margin-top:8px; color:var(--muted); font-size:13px; }
-    .inline-ctrls { display:flex; gap:8px; align-items:center; }
 
     @media (max-width:980px){
-      .admin-stage{ padding:8px; }
-      .admin-table th:nth-child(5), .admin-table td:nth-child(5) { display:none; } /* hide phone on small (adjusted index after S/N) */
       .stats-search-row { flex-direction:column; align-items:flex-start; gap:10px; }
       .search { min-width:180px; }
-      .controls-row { justify-content:flex-start; }
     }
   </style>
 </head>
@@ -199,71 +160,51 @@
     <div class="nav-name">
       <h1 class="nav-name-title">&lt;/&gt; Code Clash 2025</h1>
     </div>
-
     <div class="nav-actions">
-      <button class="nav-actions-register" id="navDashboard">Dashboard</button>
+      <button class="nav-actions-register" id="navHome">Home</button>
       <button class="nav-actions-login" id="navLogin">Login</button>
     </div>
   </div>
 
   <div class="admin-stage container">
     <header class="admin-header">
-      <div>
-        <h2 class="admin-title">Admin Panel</h2>
-        <div class="admin-sub">View registered participants • manage admin roles • quick audit</div>
-      </div>
+      <h2 class="admin-title">Admin Panel</h2>
+      <div class="admin-sub">View registered participants • manage admin roles • quick audit</div>
 
       <div class="stats-search-row">
         <div class="left-stats">
-          <div class="stat-pill" title="Count of participants (admins excluded)">
+          <div class="stat-pill">
             <div class="stat-label">Participants</div>
             <div id="statParticipants" class="stat-value">—</div>
           </div>
-
           <div class="stat-pill">
             <div class="stat-label">Admins</div>
             <div id="statAdmins" class="stat-value">—</div>
           </div>
-
           <div class="stat-pill">
             <div class="stat-label">Total users</div>
             <div id="statTotal" class="stat-value">—</div>
           </div>
         </div>
 
-        <div class="search-block" role="search" aria-label="User search">
+        <div class="mid-controls">
+          <button id="downloadCsvBtn" class="csv-btn">⬇ Download CSV</button>
+        </div>
+
+        <div class="search-block">
           <div class="search-icon">🔎</div>
           <input id="filterInput" class="search" placeholder="Search name, email, team..." />
-          <div class="top-actions">
-            <button id="refreshBtn" class="btn">Refresh</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Extra controls line (download + participants-only) as requested -->
-      <div class="controls-row">
-        <div class="mid-controls" style="margin-right:auto;">
-          <button id="downloadCsvBtn" class="csv-btn" title="Download visible rows as CSV">
-            <span class="icon">⬇</span>
-            <span>Download CSV</span>
-          </button>
-        </div>
-
-        <div style="display:flex; align-items:center; gap:12px;">
-          <div class="toggle-pill" title="Show participants only (hides admins)">
-            <div id="participantsToggle" class="toggle" role="switch" aria-checked="false" tabindex="0" aria-label="Participants only toggle">
-              <div class="toggle-knob"></div>
-            </div>
-            <div style="color:var(--muted); font-size:13px; font-family:var(--mono);">Participants only</div>
-          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="participantsOnlyToggle">
+            <span>Participants only</span>
+          </label>
+          <button id="refreshBtn" class="btn">Refresh</button>
         </div>
       </div>
     </header>
 
     <section class="panel">
-      <div class="note">Admins &amp; Super-admins are flagged and excluded from the participant count. Only super-admin can promote/demote other admins.</div>
-
-      <table class="admin-table" id="usersTable" aria-live="polite">
+      <table class="admin-table" id="usersTable">
         <thead>
           <tr>
             <th>S/N</th>
@@ -286,7 +227,7 @@
 
   <footer class="page-foot muted">Hosted on GitHub Pages · Good luck and have fun!</footer>
 
-<script type="module">
+  <script type="module">
 (async function(){
   // ---------- CONFIG ----------
   const FIREBASE_CONFIG = {
@@ -301,7 +242,7 @@
   // ----------------------------
 
   // DOM refs
-  const navDashboard = document.getElementById('navDashboard');
+  const navHome = document.getElementById('navHome');
   const navLogin = document.getElementById('navLogin');
   const usersTbody = document.getElementById('usersTbody');
   const refreshBtn = document.getElementById('refreshBtn');
@@ -309,10 +250,8 @@
   const statParticipants = document.getElementById('statParticipants');
   const statAdmins = document.getElementById('statAdmins');
   const statTotal = document.getElementById('statTotal');
-  const downloadCsvBtn = document.getElementById('downloadCsvBtn');
-  const participantsToggle = document.getElementById('participantsToggle');
 
-  navDashboard.onclick = ()=> window.location.href = 'dashboard.html';
+  navHome.onclick = ()=> window.location.href = '/code-clash/';
 
   // firebase imports (modular)
   const [
@@ -336,7 +275,6 @@
   let isAdmin = false;
   let users = []; // array of { uid, ...doc }
   let teams = []; // teams snapshot to resolve memberships
-  let participantsOnly = false; // toggle state
 
   // ---------- guard: allow only admins/superAdmin ----------
   function adminDenied() {
@@ -411,30 +349,25 @@
 
   function sanitize(s){ return (s === undefined || s === null) ? '-' : String(s); }
 
-  function isUserAdminFlag(u){
-    // support both booleans in firestore fields and custom claims
-    return !!(u.isAdmin || u.isSuperAdmin);
-  }
-
   function renderTable(){
     const q = (filterInput.value || '').trim().toLowerCase();
     const filtered = users
       .slice()
       .sort((a,b)=> ( (a.name||a.email||'').localeCompare(b.name||b.email||'')) )
       .filter(u => {
-        if(participantsOnly && isUserAdminFlag(u)) return false; // participants-only filter
         if(!q) return true;
         const hay = `${u.name||''} ${u.email||''} ${u.grade||''} ${lookupTeamForUser(u.uid).name||''}`.toLowerCase();
         return hay.includes(q);
       });
 
     // participant counts: exclude users flagged as admin or super-admin.
+    // Include the currently signed-in user only if they are a normal registered user (i.e. appear in users and not admin).
     const participantCount = users.reduce((acc,u) => {
-      if(isUserAdminFlag(u)) return acc;
+      if(u.isAdmin || u.isSuperAdmin) return acc;
       return acc + 1;
     }, 0);
 
-    const adminCount = users.reduce((acc,u) => acc + (isUserAdminFlag(u) ? 1 : 0), 0);
+    const adminCount = users.reduce((acc,u) => acc + ((u.isAdmin || u.isSuperAdmin) ? 1 : 0), 0);
     const totalUsers = users.length;
 
     // update stats UI
@@ -443,18 +376,15 @@
     statTotal.textContent = String(totalUsers);
 
     if(filtered.length === 0){
-      usersTbody.innerHTML = `<tr><td colspan="9" class="small-muted">No users found.</td></tr>`;
+      usersTbody.innerHTML = `<tr><td colspan="8" class="small-muted">No users found.</td></tr>`;
       return;
     }
 
     usersTbody.innerHTML = '';
-    let idx = 0;
     for(const u of filtered){
-      idx++;
       const team = lookupTeamForUser(u.uid);
       const tr = document.createElement('tr');
 
-      const snTd = document.createElement('td'); snTd.textContent = String(idx);
       const nameTd = document.createElement('td'); nameTd.textContent = sanitize(u.name || u.displayName || '-');
       const emailTd = document.createElement('td'); emailTd.textContent = sanitize(u.email || '-');
       const gradeTd = document.createElement('td'); gradeTd.textContent = sanitize(u.grade || '-');
@@ -516,7 +446,6 @@
       };
       actionsTd.appendChild(viewProfile);
 
-      tr.appendChild(snTd);
       tr.appendChild(nameTd);
       tr.appendChild(emailTd);
       tr.appendChild(gradeTd);
@@ -535,68 +464,6 @@
     return String(s).replace(/[&<>"]/g, (c)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   }
 
-  // ---------- CSV download (exports currently visible rows: respects search + participants-only) ----------
-  downloadCsvBtn.addEventListener('click', () => {
-    const q = (filterInput.value || '').trim().toLowerCase();
-    const filtered = users
-      .slice()
-      .sort((a,b)=> ( (a.name||a.email||'').localeCompare(b.name||b.email||'')) )
-      .filter(u => {
-        if(participantsOnly && isUserAdminFlag(u)) return false;
-        if(!q) return true;
-        const hay = `${u.name||''} ${u.email||''} ${u.grade||''} ${lookupTeamForUser(u.uid).name||''}`.toLowerCase();
-        return hay.includes(q);
-      });
-
-    if(filtered.length === 0){
-      alert('No rows to download.');
-      return;
-    }
-
-    const rows = [];
-    rows.push(['S/N','Name','Email','Grade','Phone','Team','Role','Admin']);
-    let idx = 0;
-    for(const u of filtered){
-      idx++;
-      const team = lookupTeamForUser(u.uid);
-      const role = team.id ? (team.isCaptain ? 'Captain' : 'Member') : '';
-      const adminFlag = u.isSuperAdmin ? 'Super' : (u.isAdmin ? 'Admin' : '');
-      rows.push([
-        String(idx),
-        u.name || u.displayName || '',
-        u.email || '',
-        u.grade || '',
-        u.phone || '',
-        team.name || '',
-        role,
-        adminFlag
-      ]);
-    }
-
-    // CSV string
-    const csvContent = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `code-clash-users-${new Date().toISOString().slice(0,10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  });
-
-  // ---------- Toggle wiring ----------
-  function setParticipantsOnly(on){
-    participantsOnly = !!on;
-    participantsToggle.setAttribute('aria-checked', participantsOnly ? 'true' : 'false');
-    if(participantsOnly) participantsToggle.classList.add('on'); else participantsToggle.classList.remove('on');
-    renderTable();
-  }
-
-  participantsToggle.addEventListener('click', () => setParticipantsOnly(!participantsOnly));
-  participantsToggle.addEventListener('keydown', (e) => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setParticipantsOnly(!participantsOnly); } });
-
   // ---------- UI wiring ----------
   refreshBtn.onclick = ()=> { renderTable(); };
   filterInput.oninput = ()=> renderTable();
@@ -606,7 +473,7 @@
     if(e.key === 'g' || e.key === 'G'){ filterInput.focus(); e.preventDefault(); }
   });
 
-  usersTbody.innerHTML = '<tr><td colspan="9" class="small-muted">Waiting for auth…</td></tr>';
+  usersTbody.innerHTML = '<tr><td colspan="8" class="small-muted">Waiting for auth…</td></tr>';
 })();
 </script>
 </body>
