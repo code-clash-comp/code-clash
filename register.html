@@ -6,6 +6,45 @@
   <title>Register | Code Clash 2025</title>
   <link rel="stylesheet" href="auth.css">
   <link rel="icon" type="image/png" href="logo.png">
+
+  <!-- Prevent logged-in users from using the register page -->
+  <script type="module">
+  (async () => {
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
+      authDomain: "code-clash-2025.firebaseapp.com",
+      projectId: "code-clash-2025",
+      storageBucket: "code-clash-2025.firebasestorage.app",
+      messagingSenderId: "13717806434",
+      appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
+      measurementId: "G-0BMTHMYMEL"
+    };
+
+    try {
+      const [{ initializeApp, getApps }, { getAuth, onAuthStateChanged }] = await Promise.all([
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js')
+      ]);
+
+      if (!getApps().length) {
+        initializeApp(FIREBASE_CONFIG);
+      }
+      const auth = getAuth();
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          window.location.replace('dashboard.html');
+        }
+      });
+
+      if (auth.currentUser) {
+        window.location.replace('dashboard.html');
+      }
+    } catch (err) {
+      console.warn('Auth redirect check failed — continuing to register page.', err);
+    }
+  })();
+  </script>
 </head>
 <body>
   <div class="auth-page">
@@ -21,7 +60,7 @@
         <form id="registerForm" class="auth-form" autocomplete="off">
           <h2 class="form-title">Register</h2>
 
-          <input id="name" type="text" placeholder="Full Name" required autocomplete="name" />
+          <input id="name" type="text" placeholder="Full Name" required autocomplete="off" />
           <input id="grade" type="text" placeholder="Grade & Section" required />
           <input id="email" type="email" placeholder="Email" required autocomplete="email" />
           <input id="phone" type="tel" placeholder="Phone Number" required />

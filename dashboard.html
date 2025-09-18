@@ -97,6 +97,15 @@
   margin-top: 8px;
 }
 
+/* Reauth modal input */
+#reauthModal .modal-panel input[type="password"] {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: #e8f6e8;
+  padding: 10px;
+  border-radius: 8px;
+  width:100%;
+}
   </style>
 </head>
 <body>
@@ -259,6 +268,25 @@
       <div class="modal-backdrop"></div>
     </div>
 
+    <!-- Reauth password modal -->
+    <div id="reauthModal" class="modal" aria-hidden="true">
+      <div class="modal-panel">
+        <h3 style="margin:0 0 8px 0;color:var(--accent)">Confirm deletion</h3>
+        <div class="small muted">For security, please enter your password to confirm deletion of your account.</div>
+        <label class="pf-label" style="margin-top:10px;">
+          Password
+          <input id="reauthPassword" type="password" placeholder="Your password" autocomplete="current-password" />
+        </label>
+
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button id="reauthConfirmBtn" class="btn destructive">Confirm delete</button>
+          <button id="reauthCancelBtn" class="btn">Cancel</button>
+        </div>
+        <div id="reauthMsg" class="small muted" style="margin-top:8px; min-height:18px"></div>
+      </div>
+      <div class="modal-backdrop"></div>
+    </div>
+
   </div>
 
 <script type="module">
@@ -355,10 +383,12 @@
   const modalCancelBtn = document.getElementById('modalCancelBtn');
   const modalMsg = document.getElementById('modalMsg');
 
+  const teamsPanel = document.querySelector('.teams-panel'); // used to toggle disabled-block for admins
+
   const [
     { initializeApp },
     { getFirestore, collection, doc, updateDoc, addDoc, onSnapshot, arrayUnion, arrayRemove, deleteDoc, runTransaction, getDoc },
-    { getAuth, onAuthStateChanged, updateProfile, updateEmail, signOut, deleteUser }
+    { getAuth, onAuthStateChanged, updateProfile, updateEmail, signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider }
   ] = await Promise.all([
     import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
     import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
@@ -373,6 +403,52 @@
   let currentUserDoc = null;
   let allTeams = [];
   let usersMap = {};
+
+  // admin flag (true if user is admin/superadmin)
+  let currentUserIsAdmin = false;
+
+  // utility: apply admin UI changes (greying out, note, disabling create)
+  function applyAdminUI(){
+    // toggle teams panel disabled appearance
+    if(teamsPanel){
+      if(currentUserIsAdmin){
+        teamsPanel.classList.add('disabled-block');
+      } else {
+        teamsPanel.classList.remove('disabled-block');
+      }
+    }
+
+    // ensure createTeamBtn disabled when admin
+    if(createTeamBtn){
+      if(currentUserIsAdmin){
+        createTeamBtn.classList.add('disabled-btn');
+        createTeamBtn.disabled = true;
+      } else {
+        createTeamBtn.classList.remove('disabled-btn');
+        createTeamBtn.disabled = false;
+      }
+    }
+
+    // Insert or remove admin note below teams-controls
+    const controls = document.querySelector('.teams-controls');
+    if(controls){
+      let note = document.getElementById('adminTeamsNote');
+      if(currentUserIsAdmin){
+        if(!note){
+          note = document.createElement('div');
+          note.id = 'adminTeamsNote';
+          note.className = 'admin-disabled-note small muted';
+          note.textContent = 'You are an admin — you cannot join or manage teams as a participant.';
+          controls.insertAdjacentElement('afterend', note);
+        }
+      } else {
+        if(note) note.remove();
+      }
+    }
+
+    // re-render teams list so buttons reflect admin mode
+    renderTeamsList();
+  }
 
   onSnapshot(collection(db, 'users'), (snap)=>{
     usersMap = {};
@@ -527,18 +603,32 @@
       viewBtn.onclick = (e)=> { e.preventDefault(); d.open = !d.open; };
       actions.appendChild(viewBtn);
 
+      // membership controls - create buttons but guard behavior for admin users
       const isMember = currentUser && (team.members||[]).includes(currentUser.uid);
       const userTeam = currentUser && allTeams.find(t => (t.members||[]).includes(currentUser.uid));
       const joinBtn = document.createElement('button'); joinBtn.className='btn'; joinBtn.textContent='Join';
       const leaveBtn = document.createElement('button'); leaveBtn.className='btn'; leaveBtn.textContent='Leave';
+
       if(isMember) joinBtn.style.display='none'; else joinBtn.style.display='inline-block';
       if(!isMember) leaveBtn.style.display='none';
 
-      if((team.members||[]).length >= TEAM_SIZE_LIMIT) { joinBtn.disabled = true; joinBtn.classList.add('disabled-btn'); joinBtn.title='Team is full'; }
-      if(userTeam && !isMember){ joinBtn.disabled = true; joinBtn.classList.add('disabled-btn'); joinBtn.title='You are in another team'; }
+      // If admin, mark them disabled and add tooltip
+      if(currentUserIsAdmin){
+        joinBtn.disabled = true;
+        joinBtn.classList.add('disabled-btn');
+        joinBtn.title = 'Admins cannot join teams';
+        leaveBtn.disabled = true;
+        leaveBtn.classList.add('disabled-btn');
+        leaveBtn.title = 'Admins cannot leave teams';
+      } else {
+        // non-admin hooks preserved
+        if((team.members||[]).length >= TEAM_SIZE_LIMIT) { joinBtn.disabled = true; joinBtn.classList.add('disabled-btn'); joinBtn.title='Team is full'; }
+        if(userTeam && !isMember){ joinBtn.disabled = true; joinBtn.classList.add('disabled-btn'); joinBtn.title='You are in another team'; }
+      }
 
       joinBtn.onclick = async (ev)=> {
         ev.preventDefault();
+        if(currentUserIsAdmin){ alert('Admins cannot join teams.'); return; }
         if(!currentUser){ alert('Login to join'); return; }
         const alreadyInThis = (team.members||[]).includes(currentUser.uid);
         if(alreadyInThis) { alert('You are already in this team.'); return; }
@@ -582,18 +672,25 @@
 
       leaveBtn.onclick = async (ev)=> {
         ev.preventDefault();
+        if(currentUserIsAdmin){ alert('Admins cannot leave teams.'); return; }
         if(!currentUser){ alert('Login to leave'); return; }
         if(team.captainUid === currentUser.uid){ alert("You're the captain — transfer or disband to leave."); return; }
         try{ await updateDoc(doc(db,'teams',team.id), { members: arrayRemove(currentUser.uid) }); } catch(e){ console.error('leave err', e); alert('Failed to leave (permissions?).'); }
       };
 
+      // Append membership buttons
       actions.appendChild(joinBtn);
       actions.appendChild(leaveBtn);
 
-      if(isCaptain){
+      // Disband / captain actions only shown to non-admins (admins can't manage teams here)
+      if(!currentUserIsAdmin && isCaptain){
         const dis = document.createElement('button'); dis.className='btn'; dis.textContent='Disband';
         dis.onclick = async (ev)=>{ ev.preventDefault(); if(!confirm(`Disband "${team.name}"?`)) return; try{ await deleteDoc(doc(db,'teams',team.id)); } catch(e){ console.error(e); alert('Failed to disband (permissions?).'); } };
         actions.appendChild(dis);
+      } else if (currentUserIsAdmin && isCaptain) {
+        // If somehow captain but admin, show muted label instead of actions
+        const admLabel = document.createElement('div'); admLabel.className='small muted'; admLabel.textContent='(Admin: cannot manage here)';
+        actions.appendChild(admLabel);
       }
 
       summary.appendChild(actions);
@@ -613,17 +710,25 @@
         left.innerHTML = `${displayName} ${uid === team.captainUid ? '<span class="small muted">(captain)</span>' : ''} ${uid === currentUser?.uid ? '<span class="small muted">(you)</span>' : ''}`;
 
         const right = document.createElement('div'); right.style.display='flex'; right.style.gap='8px';
-        if(currentUser && team.captainUid === currentUser.uid && uid !== currentUser.uid){
+        if(!currentUserIsAdmin && currentUser && team.captainUid === currentUser.uid && uid !== currentUser.uid){
           const rm = document.createElement('button'); rm.className='btn small-btn'; rm.textContent='Remove';
           rm.onclick = async ()=>{ if(!confirm(`Remove ${displayName}?`)) return; try{ await updateDoc(doc(db,'teams',team.id), { members: arrayRemove(uid) }); } catch(e){ console.error(e); alert('Failed to remove'); } };
           const promote = document.createElement('button'); promote.className='btn small-btn'; promote.textContent='Make Captain';
           promote.onclick = async ()=>{ if(!confirm(`Make ${displayName} the captain?`)) return; try{ await updateDoc(doc(db,'teams',team.id), { captainUid: uid, ownerUid: uid }); } catch(e){ console.error(e); alert('Failed to transfer captain'); } };
           right.appendChild(promote); right.appendChild(rm);
+        } else if (currentUserIsAdmin && currentUser && team.captainUid === currentUser.uid && uid !== currentUser.uid){
+          // admin: show muted note
+          const muted = document.createElement('div'); muted.className = 'small muted'; muted.textContent = '(admin — no actions)';
+          right.appendChild(muted);
         }
-        if(currentUser && uid === currentUser.uid && team.captainUid !== currentUser.uid){
+
+        if(!currentUserIsAdmin && currentUser && uid === currentUser.uid && team.captainUid !== currentUser.uid){
           const leaveSmall = document.createElement('button'); leaveSmall.className='btn small-btn'; leaveSmall.textContent='Leave';
           leaveSmall.onclick = async ()=>{ if(!confirm('Leave this team?')) return; try{ await updateDoc(doc(db,'teams',team.id), { members: arrayRemove(currentUser.uid) }); } catch(e){ console.error(e); alert('Failed to leave'); } };
           right.appendChild(leaveSmall);
+        } else if (currentUserIsAdmin && currentUser && uid === currentUser.uid) {
+          const muted = document.createElement('div'); muted.className='small muted'; muted.textContent='(admin)';
+          right.appendChild(muted);
         }
 
         row.appendChild(left); row.appendChild(right); membersWrap.appendChild(row);
@@ -640,7 +745,12 @@
       createTeamBtn.classList.add('disabled-btn'); createTeamBtn.disabled = true;
       teamNote.textContent = allTeams.length >= MAX_TEAMS ? 'Team cap reached (8).' : 'You already belong to a team.';
     } else {
-      createTeamBtn.classList.remove('disabled-btn'); createTeamBtn.disabled = false;
+      // respect admin state
+      if(!currentUserIsAdmin){
+        createTeamBtn.classList.remove('disabled-btn'); createTeamBtn.disabled = false;
+      } else {
+        createTeamBtn.classList.add('disabled-btn'); createTeamBtn.disabled = true;
+      }
       teamNote.textContent = '';
     }
   }
@@ -711,13 +821,21 @@ function renderColorOptions(){
 }
 
 
-  function openModal(){ renderColorOptions(); createTeamModal.setAttribute('aria-hidden','false'); createTeamModal.classList.add('open'); modalMsg.textContent = ''; modalTeamName.value=''; }
+  function openModal(){
+    if(currentUserIsAdmin){
+      modalMsg.style.color = '#f6a6a6';
+      modalMsg.textContent = 'Admins cannot create teams.';
+      return;
+    }
+    renderColorOptions(); createTeamModal.setAttribute('aria-hidden','false'); createTeamModal.classList.add('open'); modalMsg.textContent = ''; modalTeamName.value='';
+  }
   function closeModal(){ createTeamModal.setAttribute('aria-hidden','true'); createTeamModal.classList.remove('open'); modalMsg.textContent = ''; }
 
   createTeamBtn.onclick = ()=> openModal();
   modalCancelBtn.onclick = ()=> closeModal();
 
   modalCreateBtn.onclick = async ()=>{
+    if(currentUserIsAdmin){ modalMsg.style.color = '#f6a6a6'; modalMsg.textContent = 'Admins cannot create teams.'; return; }
     if(!currentUser){ alert('Login to create team'); return; }
     const name = (modalTeamName.value || '').trim();
     if(!name){ modalMsg.style.color='#f6a6a6'; modalMsg.textContent = 'Please enter a team name.'; return; }
@@ -771,6 +889,8 @@ function renderColorOptions(){
     (async ()=>{
       try {
         if(!user){
+          currentUserIsAdmin = false;
+          applyAdminUI();
           if(navAdmin) navAdmin.style.display = 'none';
           return;
         }
@@ -791,6 +911,9 @@ function renderColorOptions(){
           } catch(e){ console.warn('fallback user doc admin check failed:', e); }
         }
 
+        currentUserIsAdmin = !!claimsOk;
+        applyAdminUI();
+
         if(claimsOk){
           if(navAdmin){
             navAdmin.style.display = 'inline-block';
@@ -801,6 +924,8 @@ function renderColorOptions(){
         }
       } catch(e){
         console.error('admin button check failed', e);
+        currentUserIsAdmin = false;
+        applyAdminUI();
         if(navAdmin) navAdmin.style.display = 'none';
       }
     })();
@@ -811,79 +936,145 @@ function renderColorOptions(){
     try {
       onSnapshot(userRef, (snap) => {
         currentUserDoc = snap.exists ? snap.data() : null;
+
+        // If users doc explicitly marks isAdmin, reflect that (keeps UI consistent)
+        if(currentUserDoc && (currentUserDoc.isAdmin || currentUserDoc.isSuperAdmin)){
+          currentUserIsAdmin = true;
+        }
         populateMiniValues(); showProfileCard(); updateCreateButtonState(); updateTeamBadge();
+        applyAdminUI();
       }, err => console.error('user doc err', err));
     } catch(e){ console.error('startUserListener', e); }
   }
 
-  // DELETE ACCOUNT LOGIC
-  deleteAccountBtn.addEventListener('click', async () => {
-    if(!currentUser) { alert('You must be logged in to delete your account.'); return; }
-    if(!confirm('Delete your account? This is permanent and will remove your profile and remove you from any teams.')) return;
-
+  // --- Perform Firestore cleanup: remove user from teams and delete user doc ---
+  async function performClientDelete(uid){
     try {
-      const uid = currentUser.uid;
-
-      // 1) find teams where the user is a member
       const myTeams = (allTeams || []).filter(t => (t.members || []).includes(uid));
-
-      // 2) If user is captain of a team with other members, block delete and instruct to transfer/disband
-      const captainWithOthers = myTeams.find(t => t.captainUid === uid && (t.members?.length || 0) > 1);
-      if(captainWithOthers){
-        alert(`You're captain of "${captainWithOthers.name}" which still has other members. Transfer the captain role or disband the team before deleting your account.`);
-        return;
-      }
-
-      // Confirm final
-      if(!confirm('Final confirmation: permanently delete account now?')) return;
-
-      // 3) Attempt to delete Auth account first (may require recent login)
-      try {
-        await deleteUser(currentUser);
-      } catch(authErr){
-        console.error('deleteUser failed', authErr);
-        // common case: requires recent login
-        if(authErr && authErr.code === 'auth/requires-recent-login'){
-          alert('Deletion requires recent login. Please sign out and sign in again (or re-authenticate), then try deleting your account.');
-          return;
-        } else {
-          alert('Failed to delete account from Authentication. See console for details.');
-          return;
-        }
-      }
-
-      // 4) After auth deletion succeeded, clean up Firestore:
-      // - If user is sole member & captain: delete team doc
-      // - Otherwise remove uid from members arrays
       for(const t of myTeams){
         const members = t.members || [];
         const isCaptain = t.captainUid === uid;
         if(isCaptain && members.length <= 1){
-          // delete team (sole member)
+          // delete team if sole member and captain
           try { await deleteDoc(doc(db,'teams',t.id)); } catch(e){ console.warn('failed to delete team', t.id, e); }
         } else {
-          // remove from members
+          // remove from members if not sole captain
           try { await updateDoc(doc(db,'teams',t.id), { members: arrayRemove(uid) }); } catch(e){ console.warn('failed to remove member from team', t.id, e); }
-          // if they were captain but other members already removed (shouldn't happen due to check) — no action
         }
       }
 
-      // 5) delete user's Firestore doc
-      try {
-        await deleteDoc(doc(db, 'users', uid));
-      } catch(e){
-        console.warn('failed to delete user doc', e);
+      // Delete user's Firestore profile doc
+      try { await deleteDoc(doc(db,'users', uid)); } catch(e){ console.warn('failed to delete user doc', e); }
+      return { success: true };
+    } catch(err){
+      console.error('performClientDelete err', err);
+      return { success: false, error: err };
+    }
+  }
+
+  // --- Modal helpers for reauth ---
+  function openReauthModal(){
+    const m = document.getElementById('reauthModal'); if(!m) return;
+    m.setAttribute('aria-hidden','false'); m.classList.add('open');
+    const pw = document.getElementById('reauthPassword'); if(pw){ pw.value=''; pw.focus(); }
+    const msg = document.getElementById('reauthMsg'); if(msg) msg.textContent = '';
+  }
+  function closeReauthModal(){
+    const m = document.getElementById('reauthModal'); if(!m) return;
+    m.setAttribute('aria-hidden','true'); m.classList.remove('open');
+  }
+
+  // --- Reauth + delete flow ---
+  async function promptForPasswordAndDelete(){
+    if(!currentUser) { alert('You must be logged in to delete your account.'); return; }
+
+    openReauthModal();
+
+    const confirmBtn = document.getElementById('reauthConfirmBtn');
+    const cancelBtn  = document.getElementById('reauthCancelBtn');
+    const pwInput    = document.getElementById('reauthPassword');
+    const msgEl      = document.getElementById('reauthMsg');
+
+    if(!confirmBtn || !cancelBtn || !pwInput) { alert('Reauth UI missing'); return; }
+
+    function cleanup(){
+      confirmBtn.onclick = null;
+      cancelBtn.onclick = null;
+    }
+
+    cancelBtn.onclick = () => { cleanup(); closeReauthModal(); };
+
+    confirmBtn.onclick = async () => {
+      msgEl.style.color = '#bfe8c6'; msgEl.textContent = 'Verifying password...';
+      confirmBtn.disabled = true;
+
+      const password = pwInput.value || '';
+      if(!password){
+        msgEl.style.color = '#f6a6a6'; msgEl.textContent = 'Please enter your password.';
+        confirmBtn.disabled = false;
+        return;
       }
 
-      // 6) sign out and redirect to home
-      try { await signOut(auth); } catch(e){ /* ignore */ }
-      alert('Account deleted. Redirecting home.');
-      window.location.href = '/code-clash/';
+      try {
+        const email = currentUser.email;
+        if(!email) throw new Error('No email associated with this account.');
 
-    } catch(e){
-      console.error('delete flow failed', e);
-      alert('Something went wrong while deleting account. Check console and try again.');
-    }
+        const credential = EmailAuthProvider.credential(email, password);
+
+        // Reauthenticate (refreshes recent sign-in)
+        await reauthenticateWithCredential(currentUser, credential);
+
+        // Now perform Firestore cleanup BEFORE deleting Auth user
+        msgEl.textContent = 'Cleaning up Firestore...';
+        const res = await performClientDelete(currentUser.uid);
+        if(!res.success){
+          msgEl.style.color = '#f6a6a6';
+          msgEl.textContent = 'Failed to clean up Firestore. See console.';
+          confirmBtn.disabled = false;
+          return;
+        }
+
+        // Delete the Auth account (should succeed because we just reauth'd)
+        try {
+          await deleteUser(currentUser);
+        } catch (delAuthErr) {
+          console.error('deleteUser failed after reauth', delAuthErr);
+          msgEl.style.color = '#f6a6a6';
+          msgEl.textContent = 'Could not delete Auth account directly. Please sign in again and try or contact support.';
+          confirmBtn.disabled = false;
+          return;
+        }
+
+        // final sign-out + redirect
+        try { await signOut(auth); } catch(e){ /* ignore */ }
+        cleanup(); closeReauthModal();
+        alert('Account deleted. Redirecting home.');
+        window.location.href = '/code-clash/';
+
+      } catch(err){
+        console.error('reauth or delete error', err);
+        const code = err?.code || '';
+        if(code === 'auth/wrong-password' || code === 'auth/invalid-credential'){
+          msgEl.style.color = '#f6a6a6';
+          msgEl.textContent = 'Wrong password. Try again.';
+        } else if(code === 'auth/multi-factor-auth-required'){
+          msgEl.style.color = '#f6a6a6';
+          msgEl.textContent = 'This account requires multi-factor authentication. Please re-login to complete verification or contact support.';
+        } else {
+          msgEl.style.color = '#f6a6a6';
+          msgEl.textContent = err?.message || 'Reauthentication failed.';
+        }
+        confirmBtn.disabled = false;
+      }
+    };
+  }
+
+  // Wire delete button to reauth flow
+  deleteAccountBtn.addEventListener('click', async () => {
+    if(!currentUser) { alert('You must be logged in to delete your account.'); return; }
+    if(!confirm('Delete your account? This is permanent and will remove your profile and remove you from any teams.')) return;
+    // open password prompt and run reauth+delete
+    promptForPasswordAndDelete();
   });
 
   // ensure UI starts in a consistent state
