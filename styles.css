@@ -265,13 +265,29 @@ button, input {
 /* small slots-left text */
 .slots-left{ color: var(--muted); font-size:13px; }
 
-footer {
-  position: fixed;
-  bottom: 0;
+/* ===== Footer: non-sticky layout (paste in styles.css or dashboard.css) ===== */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Make main content expand so footer is pushed to bottom when content is short.
+   If your pages use a wrapper like .page-container or .admin-stage, target that instead. */
+main, .page-container, .admin-stage, .container {
+  flex: 1 0 auto;
+}
+
+/* Ensure footer participates in flow (not fixed/sticky) */
+.page-foot, footer {
+  position: static !important;
+  bottom: auto !important;
   width: 100%;
-  background: #161616;
-  color: #eee;
-  text-align: center;
-  padding: 15px 10px;
-  font-size: 14px;
+  /* optional visual polish */
+  z-index: auto;
 }

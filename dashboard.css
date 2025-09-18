@@ -308,6 +308,104 @@
   pointer-events: none;
 }
 
+.modal-backdrop { background: rgba(0,0,0,0.48); backdrop-filter: blur(2px); }
+.modal-panel { background: rgba(12,12,12,0.88); border: 1px solid rgba(143,217,155,0.04); color: #e8f6e8; }
+.modal-panel input[type="text"], .modal-panel input[type="email"] {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: #e8f6e8;
+  padding: 10px 12px;
+  border-radius: 8px;
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 14px;
+  margin-top:6px;
+}
+.modal-panel label.pf-label { display:block; font-size:13px; color:var(--muted); }
+.color-option[disabled] { opacity:0.35; pointer-events:none; transform:none; filter:grayscale(0.15); }
+.team-card { display:flex; align-items:center; gap:12px; }
+.team-card .team-color-bar { width:8px; height:44px; border-radius:6px; flex: 0 0 auto; }
+.team-card-hdr { display:flex; flex-direction:column; gap:2px; align-items:flex-start; }
+.team-card-hdr .small.muted { color:var(--muted); font-size:13px; }
+.team-card-name { font-weight:700; color:var(--accent); display:inline-block; }
+.team-card .team-card-actions { margin-left:auto; display:flex; gap:8px; align-items:center; }
+.team-member-row > div:first-child { color:#e8f6e8; }
+.color-option.selected { box-shadow: 0 6px 18px rgba(0,0,0,0.5) inset, 0 6px 18px rgba(0,0,0,0.25); transform: translateY(-2px); border-color: rgba(255,255,255,0.06); }
+.team-card .btn { min-width:54px; }
+/* grey out disabled color swatches and show small badge */
+.color-option {
+  width:40px;
+  height:40px;
+  border-radius:8px;
+  border:2px solid rgba(255,255,255,0.03);
+  cursor:pointer;
+  padding:0;
+  position:relative;
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, filter .12s ease;
+}
+.color-option.selected {
+  box-shadow:0 10px 30px rgba(0,0,0,0.6) inset, 0 6px 16px rgba(0,0,0,0.25);
+  transform: translateY(-3px);
+  outline: 2px solid rgba(255,255,255,0.04);
+}
+.color-option[disabled] {
+  opacity: 0.42;
+  filter: grayscale(70%);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* small 'Used' badge shown on disabled swatches */
+.color-used-badge {
+  position: absolute;
+  right: -10px;
+  top: -6px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 2px 6px;
+  font-size: 11px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
+/* ensure selected styling still visible when others are disabled */
+.color-option:not([disabled]):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+}
+
+/* Delete button style: destructive but matching theme */
+.btn.destructive {
+  background: transparent;
+  border: 1px solid rgba(246,166,166,0.12);
+  color: #f6a6a6;
+}
+
+/* visually disable interactive team area for admins */
+.disabled-block {
+  opacity: 0.52;
+  pointer-events: none; /* prevents clicks */
+  filter: grayscale(0.15);
+  transition: opacity .18s ease, filter .18s ease;
+}
+/* subtle callout shown when area disabled */
+.admin-disabled-note {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* Reauth modal input */
+#reauthModal .modal-panel input[type="password"] {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: #e8f6e8;
+  padding: 10px;
+  border-radius: 8px;
+  width:100%;
+}
+
 /* ====== Helpers ====== */
 .small.muted a {
   color: var(--accent);

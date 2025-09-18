@@ -1,0 +1,295 @@
+.admin-stage { max-width: 1100px; margin: 18px auto 100px; }
+.admin-header { display:flex; flex-direction:column; gap:12px; margin-bottom:12px; }
+.admin-title { margin:0; font-family:var(--mono); color:var(--accent); font-size:26px; }
+.admin-sub { color:var(--muted); font-size:13px; margin-top:4px; }
+
+/* stats + search row */
+.stats-search-row {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:6px;
+    width:100%;
+    flex-wrap:wrap;
+}
+.left-stats { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.stat-pill {
+    display:flex; flex-direction:column; gap:6px; padding:10px 14px; border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));
+    border:1px solid rgba(255,255,255,0.03); min-width:140px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45); transition: transform .12s ease, box-shadow .12s ease;
+}
+.stat-pill:hover { transform: translateY(-4px); box-shadow: 0 18px 36px rgba(0,0,0,0.55); }
+.stat-label { color: var(--accent); font-weight:700; font-size:13px; letter-spacing:0.2px; }
+.stat-value { color: #ffffff; font-weight:900; font-size:18px; }
+
+.controls-row { display:flex; gap:12px; align-items:center; justify-content:flex-end; margin-top:10px; width:100%; flex-wrap:wrap; }
+.mid-controls { display:flex; gap:12px; align-items:center; }
+
+/* CSV button */
+.csv-btn {
+    padding:8px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.03);
+    background:transparent; color:var(--accent); font-family:var(--mono);
+    cursor:pointer; transition: all 0.18s cubic-bezier(.2,.9,.2,1);
+    display:inline-flex; gap:8px; align-items:center; font-weight:800; white-space: nowrap;
+}
+.csv-btn .icon { transform: translateY(0); transition: transform .18s ease; }
+.csv-btn:hover { background: var(--accent); color:#0b0b0b; transform: translateY(-3px); box-shadow: 0 8px 28px rgba(127,191,127,0.18); }
+.csv-btn:hover .icon { transform: translateY(-2px); }
+
+/* toggle styled inline */
+.toggle-pill { display:inline-flex; gap:10px; align-items:center; background: rgba(255,255,255,0.01); border-radius:999px; padding:6px 10px; border:1px solid rgba(255,255,255,0.03); color:var(--muted); font-size:13px; }
+.toggle { position:relative; width:42px; height:24px; background:#333; border-radius:999px; cursor:pointer; flex: 0 0 auto; }
+.toggle-knob { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition: transform .18s ease, left .18s ease; }
+.toggle.on { background: var(--accent); }
+.toggle.on .toggle-knob { transform: translateX(18px); }
+
+.search-block { display:flex; align-items:center; gap:10px; background: rgba(255,255,255,0.012); border:1px solid rgba(255,255,255,0.03); padding:8px; border-radius:12px; box-shadow: 0 6px 20px rgba(0,0,0,0.45); }
+.search { background: transparent; border: none; padding:8px 10px 8px 34px; border-radius:8px; color:#e8f6e8; font-family:var(--mono); min-width:260px; outline:none; position:relative; }
+.search::placeholder{ color: rgba(230,240,230,0.5); }
+.search:focus { box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 10px rgba(127,191,127,0.03) inset; }
+.search-icon { position:relative; width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:14px; margin-left:6px; pointer-events:none; }
+
+/* Wrap the table in a scrollable container to keep actions inside the panel */
+.table-wrap {
+    margin-top:12px;
+    border-radius:8px;
+    overflow: auto; /* allows horizontal scroll inside the panel */
+    padding: 0 6px;
+    background: transparent;
+}
+
+/* table layout + truncation */
+.admin-table {
+    width: 100%;
+    border-collapse:collapse;
+    margin: 0;
+    min-width: 1060px; /* ensure space for actions column */
+    table-layout: fixed;
+    background: rgba(10,12,10,0.18);
+}
+.admin-table thead tr { background: linear-gradient(90deg, rgba(127,191,127,0.06), rgba(95,160,95,0.03)); }
+.admin-table th, .admin-table td {
+    text-align:left; padding:10px 12px; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.02); color: #e6f2e6;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle;
+}
+
+/* column width hints */
+.admin-table th:nth-child(1), .admin-table td:nth-child(1) { width: 48px; }   /* S/N */
+.admin-table th:nth-child(2), .admin-table td:nth-child(2) { width: 180px; }  /* Name */
+.admin-table th:nth-child(3), .admin-table td:nth-child(3) { width: 260px; }  /* Email */
+.admin-table th:nth-child(4), .admin-table td:nth-child(4) { width: 90px; }   /* Grade */
+.admin-table th:nth-child(5), .admin-table td:nth-child(5) { width: 120px; }  /* Phone */
+.admin-table th:nth-child(6), .admin-table td:nth-child(6) { width: 160px; }  /* Team */
+.admin-table th:nth-child(7), .admin-table td:nth-child(7) { width: 110px; }  /* Role */
+.admin-table th:nth-child(8), .admin-table td:nth-child(8) { width: 120px; }  /* Admin */
+.admin-table th:nth-child(9), .admin-table td:nth-child(9) { width: 200px; }  /* Actions */
+
+.admin-table th { color: var(--accent); font-weight:700; font-size:13px; }
+.small-muted { color: var(--muted); font-size:12px; }
+.role-badge { padding:6px 8px; border-radius:8px; font-weight:700; font-size:12px; display:inline-block; min-width:72px; text-align:center; }
+.badge-admin { background: rgba(255,255,255,0.02); color: var(--accent); border:1px solid rgba(143,217,155,0.04); }
+.badge-super { background: rgba(180,120,255,0.06); color: #c7b7ff; border:1px solid rgba(180,120,255,0.06); }
+
+/* ACTION BUTTONS (inside table cell) - compact and never escape */
+.table-actions { display:flex; gap:8px; justify-content:flex-end; align-items:center; flex-wrap:nowrap; overflow:hidden; }
+.action-btn {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,0.04);
+    background: transparent;
+    color: #e8f6e8;
+    font-family: var(--mono);
+    font-size:13px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+.action-btn.primary { background: var(--accent); color:#06100b; border:1px solid rgba(0,0,0,0.06); font-weight:700; }
+.action-btn.small { padding:4px 8px; font-size:12px; }
+.action-btn:active { transform: translateY(1px); }
+
+/* make header "Actions" visually separated so it doesn't look tied to title row */
+.admin-table thead th:last-child {
+    text-align: right;
+    border-left: 1px solid rgba(0,0,0,0.06);
+    padding-right: 18px;
+}
+
+.note { margin-top:8px; color:var(--muted); font-size:13px; }
+.inline-ctrls { display:flex; gap:8px; align-items:center; }
+
+@media (max-width:980px){
+    .admin-stage{ padding:8px; }
+    .admin-table th:nth-child(5), .admin-table td:nth-child(5) { display:none; } /* hide phone on small */
+    .stats-search-row { flex-direction:column; align-items:flex-start; gap:10px; }
+    .search { min-width:180px; }
+    .controls-row { justify-content:flex-start; }
+    .admin-table { table-layout: auto; min-width: 820px; }
+    .action-btn { padding:5px 8px; font-size:12px; }
+}
+
+/* custom tooltip for truncated cells */
+.cell-tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: rgba(22,28,22,0.96);
+    color: #e8f6e8;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 9999;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    max-width: 60%;
+    overflow-wrap: anywhere;
+    transform: translateY(-8px);
+    opacity: 0;
+    transition: opacity .12s ease, transform .12s ease;
+    border: 1px solid rgba(0,0,0,0.45); /* darker border to differentiate */
+}
+.cell-tooltip.show { opacity: 1; transform: translateY(-12px); }
+
+/* small transient toast when copying email */
+.toast {
+    position: fixed;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(16,22,16,0.96);
+    color: #bfe8c6;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight:700;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+    z-index: 10001;
+    opacity: 0;
+    transition: opacity .12s ease, transform .12s ease;
+    pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); pointer-events: none; }
+
+/* hover row highlight */
+.admin-table tbody tr:hover { background: rgba(127,191,127,0.02); }
+
+.table-wrap {
+    -ms-overflow-style: none;  /* IE + Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+.table-wrap::-webkit-scrollbar { display: none; } /* Safari / Chrome */
+
+/* Action buttons */
+.action-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 0 4px;
+}
+
+/* Demote button */
+.action-btn.demote {
+    color: #c62828;
+    border: 1px solid #c62828;
+    margin-left: 30px;
+}
+.action-btn.demote:hover {
+    background: #f46c7a1a;
+}
+
+/* Copy Email button */
+.action-btn.copy {
+    color: #438adb;
+    border: 1px solid #438adb;
+}
+.action-btn.copy:hover {
+    background: #008cff2d;
+}
+
+/* --------- Replace/update action styles --------- */
+/* Make table cells allow visible overflow so pills aren't clipped */
+.admin-table,
+.admin-table tbody,
+.admin-table tr,
+.admin-table td {
+    overflow: visible;      /* allow pills/tooltips to render outside cell */
+    box-sizing: border-box;
+}
+
+/* Increase Actions column width a bit to avoid wrapping/clipping */
+.admin-table th:nth-child(9),
+.admin-table td:nth-child(9) {
+    width: 260px;           /* widen actions column */
+    min-width: 180px;
+}
+
+/* Action pill container — keep subtle, match site theme */
+.action-pill {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    background: rgba(255,255,255,0.02);
+    border-radius: 999px;
+    padding: 6px;
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    white-space: nowrap;
+}
+
+/* Reuse site .btn look for buttons inside actions.
+    If your project already defines .btn and .btn.primary/.destructive,
+    these rules will only tweak sizes to match table scale. */
+.action-pill .btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1;
+    font-family: var(--mono);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: none;
+}
+
+/* Demote (destructive) — match existing destructive style but smaller */
+.action-pill .btn.destructive,
+.action-pill .destructive {
+    background: transparent;
+    border: 1px solid rgba(246,166,166,0.14);
+    color: #f6a6a6;
+    padding: 6px 10px;
+}
+
+/* Copy Email — elevated subtle outline similar to other controls */
+.action-pill .btn.copy {
+    background: transparent;
+    border: 1px solid rgba(143,217,155,0.06);
+    color: var(--accent);
+    padding: 6px 12px;
+}
+
+/* Hover states (subtle) */
+.action-pill .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.28);
+}
+
+/* Ensure the Actions column header doesn't visually connect to outside box */
+.admin-table thead th:last-child {
+    position: relative;
+    z-index: 2;
+}
+
+/* Mobile: allow table to reflow and keep actions usable */
+@media (max-width: 980px) {
+    .admin-table th:nth-child(9), .admin-table td:nth-child(9) { width: 220px; }
+    .action-pill { gap: 6px; padding: 4px; }
+    .action-pill .btn { padding: 6px 8px; font-size: 12px; }
+}
