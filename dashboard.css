@@ -432,3 +432,82 @@
     padding: 0 12px;
   }
 }
+
+/* MOBILE-HAMBURGER STYLES */
+@media (max-width: 760px) {
+  .nav-actions { display: none; }
+
+  .hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(0,0,0,0.24);
+    margin-left: 8px;
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease;
+    color: #e8f6e8;
+  }
+  .hamburger:active { transform: translateY(1px); }
+  .hamburger-box { display: inline-block; position: relative; width: 22px; height: 14px; }
+  .hamburger-inner, .hamburger-inner::before, .hamburger-inner::after {
+    display: block;
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    background: currentColor;
+    left: 0;
+    transition: transform .18s ease, opacity .18s ease;
+    border-radius: 2px;
+  }
+  .hamburger-inner { top: 50%; transform: translateY(-50%); }
+  .hamburger-inner::before { content: ""; top: -7px; }
+  .hamburger-inner::after  { content: ""; top: 7px; }
+
+  .hamburger[aria-expanded="true"] .hamburger-inner { transform: rotate(45deg); }
+  .hamburger[aria-expanded="true"] .hamburger-inner::before { transform: rotate(-90deg) translateX(-1px); top: 0; }
+  .hamburger[aria-expanded="true"] .hamburger-inner::after  { opacity: 0; }
+
+  .mobile-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 12px;
+    min-width: 180px;
+    background: rgba(12,12,12,0.96);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    padding: 8px;
+    z-index: 1200;
+    transform-origin: top right;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(.96);
+    transition: opacity .14s ease, transform .14s ease;
+  }
+  .mobile-menu[aria-hidden="false"]{ opacity: 1; transform: scale(1); pointer-events: auto; }
+
+  .mobile-menu-inner { display: flex; flex-direction: column; gap:8px; }
+  .mobile-menu-inner button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #e8f6e8;
+    font-family: var(--mono);
+    font-weight:700;
+    cursor: pointer;
+  }
+  .mobile-menu-inner button:hover, .mobile-menu-inner button:focus {
+    background: rgba(127,191,127,0.06);
+    color: #bff0c4;
+    outline: none;
+  }
+  .mobile-menu { right: 8px; left: 8px; top: calc(100% + 8px); min-width: auto; }
+}

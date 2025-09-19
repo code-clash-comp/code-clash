@@ -10,15 +10,27 @@
 </head>
 <body>
   <div class="page-container">
-    <div class="nav">
+    <div class="nav" style="position:relative;">
       <div class="nav-name">
         <h1 class="nav-name-title">&lt;/&gt; Code Clash 2025</h1>
       </div>
 
       <div class="nav-actions">
         <button id="navAdmin" class="nav-actions-admin" style="display:none;">Admin Panel</button>
-        <button class="nav-actions-register" id="navRegister">Home</button>
-        <button class="nav-actions-login" id="navLogin">Login</button>
+        <button id="navRegister" class="nav-actions-register">Home</button>
+        <button id="navLogin" class="nav-actions-login">Logout</button>
+      </div>
+
+      <!-- Mobile hamburger -->
+      <button id="mobileMenuBtn" class="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
+
+      <!-- Mobile menu -->
+      <div id="mobileMenu" class="mobile-menu" role="menu" aria-hidden="true">
+        <div class="mobile-menu-inner"></div>
       </div>
     </div>
 
@@ -188,6 +200,54 @@
     </div>
 
   </div>
+
+<script>
+  (function(){
+    const btn = document.getElementById('mobileMenuBtn');
+    const menu = document.getElementById('mobileMenu');
+    const inner = document.querySelector('.mobile-menu-inner');
+    const desktopActions = document.querySelector('.nav-actions');
+
+    // show/hide hamburger based on width
+    function setMobileVisibility(){
+      const mobile = window.innerWidth <= 760;
+      if(btn) btn.style.display = mobile ? 'inline-flex' : 'none';
+      if(menu) menu.style.display = mobile ? '' : 'none';
+      if(!mobile && menu){ menu.setAttribute('aria-hidden','true'); if(btn) btn.setAttribute('aria-expanded','false'); }
+    }
+    setMobileVisibility();
+    window.addEventListener('resize', setMobileVisibility);
+
+    // build mobile menu from desktop buttons
+    function buildMobileMenu(){
+      if(!desktopActions || !inner) return;
+      inner.innerHTML = '';
+      Array.from(desktopActions.children).forEach(orig => {
+        const b = document.createElement('button');
+        b.className = orig.className || '';
+        b.innerHTML = orig.innerHTML || orig.textContent || 'Menu';
+        b.addEventListener('click', ()=>{
+          menu.setAttribute('aria-hidden','true');
+          btn.setAttribute('aria-expanded','false');
+          try { orig.click(); } catch(e){ console.error(e); }
+        });
+        inner.appendChild(b);
+      });
+    }
+    buildMobileMenu();
+
+    // toggle menu
+    function openMenu(){ menu.setAttribute('aria-hidden','false'); btn.setAttribute('aria-expanded','true'); setTimeout(()=>document.addEventListener('click', outsideClick),10); document.addEventListener('keydown', onKeyDown); }
+    function closeMenu(){ menu.setAttribute('aria-hidden','true'); btn.setAttribute('aria-expanded','false'); document.removeEventListener('click', outsideClick); document.removeEventListener('keydown', onKeyDown); }
+    function outsideClick(e){ if(menu.contains(e.target)||btn.contains(e.target)) return; closeMenu(); }
+    function onKeyDown(e){ if(e.key==='Escape') closeMenu(); }
+
+    btn.addEventListener('click', e=>{ e.stopPropagation(); btn.getAttribute('aria-expanded')==='true'?closeMenu():openMenu(); });
+
+    // rebuild menu if desktop buttons change
+    new MutationObserver(buildMobileMenu).observe(desktopActions,{ childList:true, subtree:true, characterData:true });
+  })();
+</script>
 
 <script type="module">
 (async function(){

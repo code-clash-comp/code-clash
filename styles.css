@@ -277,8 +277,6 @@ body {
   min-height: 100vh;
 }
 
-/* Make main content expand so footer is pushed to bottom when content is short.
-   If your pages use a wrapper like .page-container or .admin-stage, target that instead. */
 main, .page-container, .admin-stage, .container {
   flex: 1 0 auto;
 }
@@ -288,6 +286,184 @@ main, .page-container, .admin-stage, .container {
   position: static !important;
   bottom: auto !important;
   width: 100%;
-  /* optional visual polish */
   z-index: auto;
+}
+
+/* ---------- MOBILE-ONLY LAYOUT ---------- */
+@media (max-width: 760px) {
+  /* Put hero/type area on top */
+  .stage-inner {
+    display: flex;
+    flex-direction: column;   /* stack vertically */
+    align-items: stretch;
+    gap: 12px;                /* small breathing space */
+  }
+
+  /* Hero block */
+  .typebox {
+    order: 1;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 12px;
+  }
+
+  /* Details panel (below hero) */
+  .right-panel {
+    order: 2;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 12px;
+  }
+
+  .right-panel .panel {
+    min-height: auto;          /* let content define height */
+    padding: 12px;
+    box-sizing: border-box;
+  }
+
+  /* Headings scale down on small screens */
+  .hero-title {
+    font-size: clamp(20px, 6vw, 28px);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .hero-sub {
+    font-size: clamp(14px, 4.5vw, 16px);
+    margin-bottom: 12px;
+  }
+
+  /* CTA buttons full width */
+  .register-cta-wrapper {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+    margin: 0;
+  }
+  .big-register,
+  .secondary-cta {
+    width: 100%;
+  }
+
+  /* Countdown pills tighter */
+  .countdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    justify-content: center;
+  }
+
+  /* Ensure footer doesn’t leave giant gaps */
+  main {
+    padding-bottom: 24px;
+  }
+  .page-foot {
+    position: static !important; /* not sticky */
+    margin-top: 16px;
+  }
+}
+
+/* ---------- MOBILE HAMBURGER (mobile-only) ---------- */
+@media (max-width: 760px) {
+
+  /* hide desktop nav actions, show hamburger */
+  .nav-actions { display: none !important; }
+
+  /* hamburger button */
+  .hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(0,0,0,0.24);
+    margin-left: 8px;
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease;
+  }
+  .hamburger:active { transform: translateY(1px); }
+  .hamburger-box { display: inline-block; position: relative; width: 22px; height: 14px; }
+  .hamburger-inner, .hamburger-inner::before, .hamburger-inner::after {
+    display: block;
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    background: currentColor;
+    left: 0;
+    transition: transform .18s ease, opacity .18s ease;
+    border-radius: 2px;
+  }
+  .hamburger-inner { top: 50%; transform: translateY(-50%); }
+  .hamburger-inner::before { content: ""; top: -7px; }
+  .hamburger-inner::after  { content: ""; top: 7px; }
+
+  /* when expanded, morph into X */
+  .hamburger[aria-expanded="true"] .hamburger-inner { transform: rotate(45deg); }
+  .hamburger[aria-expanded="true"] .hamburger-inner::before { transform: rotate(-90deg) translateX(-1px); top: 0; }
+  .hamburger[aria-expanded="true"] .hamburger-inner::after  { opacity: 0; }
+
+  /* dropdown panel */
+  .mobile-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 12px;
+    min-width: 180px;
+    background: rgba(12,12,12,0.96);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    padding: 8px;
+    z-index: 1200;
+    transform-origin: top right;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(.96);
+    transition: opacity .14s ease, transform .14s ease;
+  }
+  .mobile-menu[aria-hidden="false"]{ opacity: 1; transform: scale(1); pointer-events: auto; }
+
+  .mobile-menu-inner { display: flex; flex-direction: column; gap:8px; }
+  .mobile-menu-inner .nav-actions-register,
+  .mobile-menu-inner .nav-actions-login,
+  .mobile-menu-inner .nav-actions-admin,
+  .mobile-menu-inner .btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #e8f6e8;
+    font-family: var(--mono);
+    font-weight:700;
+  }
+
+  /* visually separate admin button if present */
+  .mobile-menu-inner .nav-actions-admin { color: rgba(181, 120, 255, 0.828); border-bottom: 1px dashed rgba(255,255,255,0.03); padding-bottom: 10px; }
+
+  /* small hover/focus states */
+  .mobile-menu-inner button:hover, .mobile-menu-inner button:focus {
+    background: rgba(127,191,127,0.06);
+    color: #bff0c4;
+    outline: none;
+  }
+
+  .nav-actions-admin:hover {
+    background: rgb(205, 164, 255);
+    color: rgba(181, 120, 255, 0.828);
+    outline: none;
+  }
+
+  /* ensure menu fits on very small screens */
+  .mobile-menu { right: 8px; left: 8px; top: calc(100% + 8px); min-width: auto; }
+}
+
+.welcome-msg {
+  font-size: 25px;
+  color: #bfe8c6;
+  font-weight: 500;
 }

@@ -94,21 +94,7 @@
 
 /* ACTION BUTTONS (inside table cell) - compact and never escape */
 .table-actions { display:flex; gap:8px; justify-content:flex-end; align-items:center; flex-wrap:nowrap; overflow:hidden; }
-.action-btn {
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:6px 10px;
-    border-radius:8px;
-    border:1px solid rgba(255,255,255,0.04);
-    background: transparent;
-    color: #e8f6e8;
-    font-family: var(--mono);
-    font-size:13px;
-    cursor: pointer;
-    white-space: nowrap;
-    flex: 0 0 auto;
-}
+
 .action-btn.primary { background: var(--accent); color:#06100b; border:1px solid rgba(0,0,0,0.06); font-weight:700; }
 .action-btn.small { padding:4px 8px; font-size:12px; }
 .action-btn:active { transform: translateY(1px); }
@@ -182,6 +168,22 @@
 .table-wrap::-webkit-scrollbar { display: none; } /* Safari / Chrome */
 
 /* Action buttons */
+
+.action-btn {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,0.04);
+    background: transparent;
+    color: #e8f6e8;
+    font-family: var(--mono);
+    font-size:13px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
 .action-btn {
     padding: 6px 14px;
     border-radius: 6px;
@@ -197,7 +199,6 @@
 .action-btn.demote {
     color: #c62828;
     border: 1px solid #c62828;
-    margin-left: 30px;
 }
 .action-btn.demote:hover {
     background: #f46c7a1a;
@@ -210,6 +211,14 @@
 }
 .action-btn.copy:hover {
     background: #008cff2d;
+}
+
+.action-btn.promote {
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+.action-btn.promote:hover {
+    background: #62ff0016;
 }
 
 /* --------- Replace/update action styles --------- */

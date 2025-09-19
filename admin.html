@@ -6,6 +6,7 @@
   <title>Admin Panel | Code Clash 2025</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="admin.css">
   <link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
@@ -138,12 +139,13 @@
   // firebase imports (modular)
   const [
     { initializeApp },
-    { getFirestore, collection, doc, onSnapshot, updateDoc, getDoc },
-    { getAuth, onAuthStateChanged, signOut }
+    { getFirestore, collection, doc, onSnapshot, updateDoc, getDoc, serverTimestamp },
+    { getAuth, onAuthStateChanged, signOut },
   ] = await Promise.all([
     import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
     import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
-    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js')
+    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js'),
+
   ]).catch(err => { console.error('firebase import failed', err); throw err; });
 
   const app = initializeApp(FIREBASE_CONFIG);
@@ -420,6 +422,7 @@
       actionsTd.className = 'table-actions';
 
       // Promote / Demote (super-admin only)
+      // replace the promote/demote blocks with the code below
       if(isSuperAdmin){
         if(u.isSuperAdmin){
           const dash = document.createElement('div'); dash.className = 'small-muted'; dash.textContent = '—';
@@ -431,21 +434,35 @@
           demoteBtn.onclick = async ()=> {
             if(!confirm(`Demote ${u.name || u.email}?`)) return;
             try {
-              await updateDoc(doc(db,'users',u.uid), { isAdmin: false });
+              // only allowed keys: isAdmin + updatedAt (serverTimestamp ensures proper Firestore timestamp type)
+              await updateDoc(doc(db, 'users', u.uid), {
+                isAdmin: false,
+                updatedAt: serverTimestamp()
+              });
               showToast('Demoted');
-            } catch(e){ console.error(e); alert('Failed to demote (check rules).'); }
+            } catch (err) {
+              console.error('demote failed', err);
+              // expose a bit more info for debugging (remove in prod)
+              alert('Failed to demote — check rules and that you are super-admin. See console for details.');
+            }
           };
           actionsTd.appendChild(demoteBtn);
         } else {
           const promoteBtn = document.createElement('button');
-          promoteBtn.className = 'action-btn primary small';
+          promoteBtn.className = 'action-btn promote';
           promoteBtn.textContent = 'Promote';
           promoteBtn.onclick = async ()=> {
             if(!confirm(`Promote ${u.name || u.email} to admin?`)) return;
             try {
-              await updateDoc(doc(db,'users',u.uid), { isAdmin: true });
+              await updateDoc(doc(db, 'users', u.uid), {
+                isAdmin: true,
+                updatedAt: serverTimestamp()
+              });
               showToast('Promoted');
-            } catch(e){ console.error(e); alert('Failed to promote (check rules).'); }
+            } catch (err) {
+              console.error('promote failed', err);
+              alert('Failed to promote — check rules and that you are super-admin. See console for details.');
+            }
           };
           actionsTd.appendChild(promoteBtn);
         }
@@ -453,6 +470,7 @@
         const info = document.createElement('div'); info.className = 'small-muted'; info.textContent = 'Super-admin only';
         actionsTd.appendChild(info);
       }
+
 
       // Copy email (every row)
       const copyBtn = document.createElement('button');
