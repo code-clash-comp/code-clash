@@ -281,14 +281,6 @@ main, .page-container, .admin-stage, .container {
   flex: 1 0 auto;
 }
 
-/* Ensure footer participates in flow (not fixed/sticky) */
-.page-foot, footer {
-  position: static !important;
-  bottom: auto !important;
-  width: 100%;
-  z-index: auto;
-}
-
 /* ---------- MOBILE-ONLY LAYOUT ---------- */
 @media (max-width: 760px) {
   /* Put hero/type area on top */
@@ -466,4 +458,12 @@ main, .page-container, .admin-stage, .container {
   font-size: 25px;
   color: #bfe8c6;
   font-weight: 500;
+}
+
+/* Ensure footer participates in flow (not fixed/sticky) */
+.page-foot, footer {
+  position: static !important;
+  bottom: auto !important;
+  width: 100%;
+  z-index: auto;
 }

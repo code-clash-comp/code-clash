@@ -6,50 +6,6 @@
   <title>Login | Code Clash 2025</title>
   <link rel="stylesheet" href="auth.css">
   <link rel="icon" type="image/png" href="logo.png">
-
-  <!-- Prevent logged-in users from using the login page -->
-  <script type="module">
-  (async () => {
-    const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
-      authDomain: "code-clash-2025.firebaseapp.com",
-      projectId: "code-clash-2025",
-      storageBucket: "code-clash-2025.firebasestorage.app",
-      messagingSenderId: "13717806434",
-      appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
-      measurementId: "G-0BMTHMYMEL"
-    };
-
-    try {
-      const [{ initializeApp, getApps }, { getAuth, onAuthStateChanged }] = await Promise.all([
-        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
-        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js')
-      ]);
-
-      // initialize only if no apps exist yet (safe for pages that init later)
-      if (!getApps().length) {
-        initializeApp(FIREBASE_CONFIG);
-      }
-      const auth = getAuth();
-
-      // onAuthStateChanged will fire once with current state
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          // redirect away from login/register if already authenticated
-          window.location.replace('dashboard.html');
-        }
-      });
-
-      // synchronous fallback (very small chance)
-      if (auth.currentUser) {
-        window.location.replace('dashboard.html');
-      }
-    } catch (err) {
-      // If Firebase fails to load, do nothing — allow page to operate (prevents lockout)
-      console.warn('Auth redirect check failed — continuing to login page.', err);
-    }
-  })();
-  </script>
 </head>
 <body>
   <div class="auth-page">
@@ -91,10 +47,35 @@
     };
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
     const app = initializeApp(FIREBASE_CONFIG);
     const auth = getAuth(app);
+
+    let authChecked = false;
+    onAuthStateChanged(auth, async (user) => {
+      if (authChecked) return; // run redirect logic only once on load
+      authChecked = true;
+
+      if (user) {
+        // user is logged in -> redirect to admin/dashboard based on claims
+        try {
+          const idRes = await user.getIdTokenResult();
+          const claims = idRes.claims || {};
+          if (claims.superAdmin || claims.isSuperAdmin || claims.admin || claims.isAdmin) {
+            window.location.replace('admin.html');
+          } else {
+            window.location.replace('dashboard.html');
+          }
+          return;
+        } catch (err) {
+          // if any error, fallback to dashboard
+          console.warn('id token check failed, redirecting to dashboard', err);
+          window.location.replace('/code-clash/');
+          return;
+        }
+      }
+    });
 
     // typewriter (login)
     (function typewriterLogin(){
@@ -153,7 +134,10 @@
       try{
         await signInWithEmailAndPassword(auth, email, password);
         showMsg('Logged in — redirecting...', 'info');
-        setTimeout(()=>{ window.location.href = '/code-clash/'; }, 600);
+        setTimeout(() => {
+          window.location.replace('dashboard.html');
+        }, 600);
+
       } catch(err){
         console.error('Login', err);
         showMsg(err?.message || 'Login failed', 'error');

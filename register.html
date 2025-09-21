@@ -192,17 +192,14 @@
           } else {
             window.location.replace('dashboard.html');
           }
-          return; // stop further setup
+          return;
         } catch (err) {
           // if any error, fallback to dashboard
           console.warn('id token check failed, redirecting to dashboard', err);
-          window.location.replace('dashboard.html');
+          window.location.replace('/code-clash/');
           return;
         }
       }
-
-      // if no user, proceed to initialize the registration handlers (the page stays visible)
-      // (we do NOT re-import or re-init auth/app here; everything already set)
     });
 
     // ---------- form submit ----------
@@ -248,7 +245,7 @@
         }
 
         regMsg('Registered successfully! Redirecting...', 'info');
-        setTimeout(() => { window.location.href = '/code-clash/'; }, 900);
+        setTimeout(() => { window.location.href = '/dashboard.html'; }, 900);
 
       } catch (err) {
         console.error('Registration error:', err);

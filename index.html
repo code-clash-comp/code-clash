@@ -185,89 +185,195 @@
   <footer class="page-foot muted-no-margin">Hosted on GitHub Pages · Good luck and have fun!</footer>
 
   <!-- mobile menu helper script -->
-  <script>
-    (function(){
-      const btn = document.getElementById('mobileMenuBtn');
-      const menu = document.getElementById('mobileMenu');
-      const inner = document.querySelector('.mobile-menu-inner');
-      const desktopActions = document.querySelector('.nav-actions');
+  <!-- REPLACE previous mobile menu helper with this block -->
+<script>
+(function(){
+  const btn = document.getElementById('mobileMenuBtn');
+  const menu = document.getElementById('mobileMenu');
+  const inner = document.querySelector('.mobile-menu-inner');
+  const desktopActions = document.querySelector('.nav-actions');
 
-      // show/hide the hamburger and menu container based on viewport width
-      function setMobileVisibility() {
-        const mobile = window.innerWidth <= 760;
-        if(btn) btn.style.display = mobile ? 'inline-flex' : 'none';
-        if(menu) menu.style.display = mobile ? '' : 'none';
-        if(!mobile && menu) { menu.setAttribute('aria-hidden','true'); if(btn) btn.setAttribute('aria-expanded','false'); }
-      }
-      setMobileVisibility();
-      window.addEventListener('resize', setMobileVisibility);
+  if(!btn || !menu || !inner) return;
 
-      function buildMobileMenu() {
-        if(!desktopActions || !inner) return;
-        inner.innerHTML = '';
-        Array.from(desktopActions.children).forEach(orig => {
-          const b = document.createElement('button');
-          b.className = orig.className || '';
-          b.innerHTML = orig.innerHTML || orig.textContent || 'Menu';
-          if(orig.id) b.dataset.origId = orig.id;
-          b.addEventListener('click', (e)=>{
-            if(menu) {
-              menu.setAttribute('aria-hidden', 'true');
-              if(btn) btn.setAttribute('aria-expanded', 'false');
-            }
-            let target = null;
-            if(b.dataset.origId) target = document.getElementById(b.dataset.origId);
-            if(!target) {
-              const candidates = Array.from(desktopActions.children);
-              target = candidates.find(c => (c.innerText || c.textContent || '').trim() === (b.innerText || b.textContent || '').trim());
-            }
-            try {
-              if(target) target.click();
-            } catch(err) {
-              console.error('Mobile menu click proxy failed', err);
-            }
-          });
-          inner.appendChild(b);
-        });
-      }
+  const canonicalIds = ['navDashboard','navRegister','navLogin'];
 
-      buildMobileMenu(); // initial build
+  function setMobileVisibility(){
+    const mobile = window.innerWidth <= 760;
+    btn.style.display = mobile ? 'inline-flex' : 'none';
+    menu.style.display = mobile ? '' : 'none';
+    if(!mobile){
+      menu.setAttribute('aria-hidden','true');
+      btn.setAttribute('aria-expanded','false');
+    } else {
+      buildMobileMenu();
+    }
+  }
+  setMobileVisibility();
+  window.addEventListener('resize', setMobileVisibility);
 
-      // toggle behavior
-      if(!btn || !menu) return;
-      function openMenu(){
-        menu.setAttribute('aria-hidden', 'false');
-        btn.setAttribute('aria-expanded', 'true');
-        setTimeout(()=> document.addEventListener('click', outsideClick), 10);
-        document.addEventListener('keydown', onKeyDown);
+  // returns true if element has inline style display:none or hidden attribute
+  function explicitlyHidden(el){
+    if(!el) return true;
+    if(el.hidden) return true;
+    const s = (el.getAttribute('style') || '').toLowerCase();
+    if(/\bdisplay\s*:\s*none\b/.test(s)) return true;
+    return false;
+  }
+
+  // include canonical items even if CSS media rules hide desktop nav on mobile
+  function shouldInclude(el){
+    if(!el) return false;
+    // explicit inline hiding => definitely exclude
+    if(explicitlyHidden(el)) return false;
+    // if it has attribute data-force-mobile="true" include
+    if(el.getAttribute && el.getAttribute('data-force-mobile') === 'true') return true;
+    // otherwise include by default (we want menu usable for unauthed users)
+    return true;
+  }
+
+  // canonical action fallback (guaranteed navigation even if desktop handlers absent)
+  function performCanonicalActionById(id){
+    switch(id){
+      case 'navRegister':
+        window.location.href = 'register.html';
+        return;
+      case 'navLogin':
+        window.location.href = 'login.html';
+        return;
+      case 'navDashboard':
+        // prefer dashboard; if admin link is visible on desktop it will be shown separately
+        window.location.href = 'dashboard.html';
+        return;
+      default:
+        return;
+    }
+  }
+
+  function proxyClickToOriginal(orig, menuBtn){
+    // hide menu first
+    menu.setAttribute('aria-hidden','true');
+    btn.setAttribute('aria-expanded','false');
+
+    // if original element has a direct onclick function, call it
+    try {
+      if(orig && typeof orig.onclick === 'function'){
+        orig.onclick();
+        return;
       }
-      function closeMenu(){
-        menu.setAttribute('aria-hidden', 'true');
-        btn.setAttribute('aria-expanded', 'false');
-        document.removeEventListener('click', outsideClick);
-        document.removeEventListener('keydown', onKeyDown);
+      // if original has a data-action attribute, trust it (not common, but helpful)
+      const dataAction = orig && orig.getAttribute && orig.getAttribute('data-action');
+      if(dataAction){
+        // common patterns: "logout", "open-dashboard" etc.
+        if(dataAction === 'logout'){
+          // try to trigger click (some pages attach handler to element)
+          try { orig.click(); } catch(e){ /* ignore */ }
+          return;
+        }
       }
-      function outsideClick(e){
-        if(menu.contains(e.target) || btn.contains(e.target)) return;
-        closeMenu();
+      // otherwise perform canonical fallback if available
+      if(orig && orig.id && canonicalIds.includes(orig.id)){
+        performCanonicalActionById(orig.id);
+        return;
       }
-      function onKeyDown(e){
-        if(e.key === 'Escape') closeMenu();
+      // last resort: call click() on the original to fire listeners attached via addEventListener
+      if(orig && typeof orig.click === 'function'){
+        orig.click();
+        return;
       }
-      btn.addEventListener('click', (ev)=>{
-        ev.stopPropagation();
-        const expanded = btn.getAttribute('aria-expanded') === 'true';
-        if(expanded) closeMenu(); else openMenu();
+    } catch(err){
+      console.error('Mobile menu proxy click failed', err);
+    }
+    // absolute fallback: do nothing (shouldn't happen)
+  }
+
+  function buildMobileMenu(){
+    inner.innerHTML = '';
+
+    // canonical items first (deterministic order)
+    for(const id of canonicalIds){
+      const orig = document.getElementById(id);
+      // include if element exists AND not explicitly hidden
+      if(!orig) continue;
+      if(!shouldInclude(orig)) continue;
+
+      const b = document.createElement('button');
+      b.className = orig.className || '';
+      b.textContent = (orig.getAttribute('aria-label') || orig.innerText || orig.textContent || id).trim();
+      b.dataset.origId = id;
+      b.addEventListener('click', (e) => proxyClickToOriginal(orig, b));
+      inner.appendChild(b);
+    }
+
+    // then include any other visible buttons from .nav-actions (avoid duplicating canonical items)
+    if(desktopActions){
+      Array.from(desktopActions.children).forEach(orig => {
+        if(!orig) return;
+        if(orig.id && canonicalIds.includes(orig.id)) return;
+        if(!shouldInclude(orig)) return;
+
+        const b = document.createElement('button');
+        b.className = orig.className || '';
+        b.textContent = (orig.getAttribute('aria-label') || orig.innerText || orig.textContent || 'Action').trim();
+        if(orig.id) b.dataset.origId = orig.id;
+        b.addEventListener('click', (e) => proxyClickToOriginal(orig, b));
+        inner.appendChild(b);
       });
+    }
 
-      // ---------- DYNAMIC UPDATES ----------
-      // Whenever desktop nav buttons change, rebuild the mobile menu
-      const observer = new MutationObserver(buildMobileMenu);
-      observer.observe(desktopActions, { childList: true, subtree: true, characterData: true });
+    if(inner.children.length === 0){
+      const fallback = document.createElement('div');
+      fallback.className = 'small-muted';
+      fallback.textContent = 'No actions available';
+      inner.appendChild(fallback);
+    }
+  }
 
-    })();
-    </script>
+  function openMenu(){
+    buildMobileMenu();
+    menu.setAttribute('aria-hidden','false');
+    btn.setAttribute('aria-expanded','true');
+    setTimeout(()=> document.addEventListener('click', outsideClick), 10);
+    document.addEventListener('keydown', onKeyDown);
+  }
+  function closeMenu(){
+    menu.setAttribute('aria-hidden','true');
+    btn.setAttribute('aria-expanded','false');
+    document.removeEventListener('click', outsideClick);
+    document.removeEventListener('keydown', onKeyDown);
+  }
+  function outsideClick(e){
+    if(menu.contains(e.target) || btn.contains(e.target)) return;
+    closeMenu();
+  }
+  function onKeyDown(e){
+    if(e.key === 'Escape') closeMenu();
+  }
 
+  btn.addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    if(expanded) closeMenu(); else openMenu();
+  });
+
+  // rebuild menu when desktopActions change
+  const observer = new MutationObserver((mutations) => {
+    if(window._menuRebuildTimer) clearTimeout(window._menuRebuildTimer);
+    window._menuRebuildTimer = setTimeout(() => {
+      if(window.innerWidth <= 760) buildMobileMenu();
+    }, 60);
+  });
+  if(desktopActions) observer.observe(desktopActions, { childList: true, subtree: true, attributes: true, attributeFilter: ['style','class','hidden'] });
+
+  // also listen for explicit nav-updated event
+  document.addEventListener('nav-updated', () => {
+    if(window.innerWidth <= 760) buildMobileMenu();
+  });
+
+  // initial build for mobile
+  if(window.innerWidth <= 760) buildMobileMenu();
+
+})();
+</script>
 
 <script type="module">
 (async function(){
@@ -492,6 +598,12 @@
             navDashboard.onclick = null;
           }
 
+          // rebuild mobile menu to reflect current nav visibility (important)
+          try { document.querySelector('.hamburger').style.display && document.querySelector('.hamburger').style.display !== 'none' ? (()=>{/*noop*/})() : null; } catch(e){}
+          // dispatch a small custom event to notify mobile menu script (or rely on mutation observer which also listens attribute changes)
+          const ev = new Event('nav-updated');
+          document.dispatchEvent(ev);
+
         } else {
           // not logged in: revert to logged-out UI
           if(navRegister){
@@ -511,7 +623,26 @@
             welcomeMsg.style.display = 'none';
           }
           if(navDashboard) navDashboard.style.display = 'none';
+          // notify menu
+          document.dispatchEvent(new Event('nav-updated'));
         }
+      });
+
+      // also listen for the custom event to rebuild mobile menu (ensures immediate reflection)
+      document.addEventListener('nav-updated', ()=>{
+        // only rebuild when mobile menu exists
+        try {
+          if(window.innerWidth <= 760) {
+            // call the mobile menu builder function by dispatching a click to hamburger (open->close pattern would rebuild via observer)
+            // but we can simply find the function's buildMobileMenu via the global scope — not available — so we'll simulate by toggling a trivial mutation:
+            const navActions = document.querySelector('.nav-actions');
+            if(navActions){
+              // mutate a temporary attribute to trigger MutationObserver used by mobile menu
+              navActions.setAttribute('data-menu-refresh', Date.now().toString());
+              setTimeout(()=> navActions.removeAttribute('data-menu-refresh'), 50);
+            }
+          }
+        } catch(e){ console.warn('nav-updated handler error', e); }
       });
 
     } catch (err) {
