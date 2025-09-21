@@ -1,50 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Register | Code Clash 2025</title>
+  <title>Register | Code Clash</title>
   <link rel="stylesheet" href="auth.css">
   <link rel="icon" type="image/png" href="logo.png">
-
-  <!-- Prevent logged-in users from using the register page -->
-  <script type="module">
-  (async () => {
-    const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
-      authDomain: "code-clash-2025.firebaseapp.com",
-      projectId: "code-clash-2025",
-      storageBucket: "code-clash-2025.firebasestorage.app",
-      messagingSenderId: "13717806434",
-      appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
-      measurementId: "G-0BMTHMYMEL"
-    };
-
-    try {
-      const [{ initializeApp, getApps }, { getAuth, onAuthStateChanged }] = await Promise.all([
-        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
-        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js')
-      ]);
-
-      if (!getApps().length) {
-        initializeApp(FIREBASE_CONFIG);
-      }
-      const auth = getAuth();
-
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          window.location.replace('dashboard.html');
-        }
-      });
-
-      if (auth.currentUser) {
-        window.location.replace('dashboard.html');
-      }
-    } catch (err) {
-      console.warn('Auth redirect check failed — continuing to register page.', err);
-    }
-  })();
-  </script>
 </head>
 <body>
   <div class="auth-page">
@@ -60,7 +21,7 @@
         <form id="registerForm" class="auth-form" autocomplete="off">
           <h2 class="form-title">Register</h2>
 
-          <input id="name" type="text" placeholder="Full Name" required autocomplete="off" />
+          <input id="name" type="text" placeholder="Full Name" required autocomplete="name" />
           <input id="grade" type="text" placeholder="Grade & Section" required />
           <input id="email" type="email" placeholder="Email" required autocomplete="email" />
           <input id="phone" type="tel" placeholder="Phone Number" required />
@@ -76,10 +37,27 @@
     </main>
   </div>
 
-  <!-- Firebase (modular) + registration logic -->
   <script type="module">
-    // --------- Put your firebaseConfig here (replace the placeholders) ----------
-    const FIREBASE_CONFIG = {
+    // -----------------------
+    // Consolidated Firebase + Register logic
+    // (single module import; no duplicate auth/app)
+// -----------------------
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      updateProfile,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    // ---------- CONFIG ----------
+    const firebaseConfig = {
       apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
       authDomain: "code-clash-2025.firebaseapp.com",
       projectId: "code-clash-2025",
@@ -88,18 +66,42 @@
       appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
       measurementId: "G-0BMTHMYMEL"
     };
-    // ------------------------------------------------------------------------
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-
-    // init
-    const app = initializeApp(FIREBASE_CONFIG);
+    // Initialize single app instance (safe guard against double init)
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // typewriter (looping)
+    // expose for debugging (optional)
+    window.firebaseApp = app;
+    window.auth = auth;
+    window.db = db;
+
+    // ------------------- UI helpers -------------------
+    const regMsgEl = document.getElementById('regMsg');
+    const form = document.getElementById('registerForm');
+    const regBtn = document.getElementById('registerBtn');
+
+    const regMsg = (text, type='info') => {
+      regMsgEl.textContent = text;
+      regMsgEl.style.color = (type === 'error') ? '#f6a6a6' : '#bfe8c6';
+    };
+
+    function normalizePhone(p) {
+      if (!p) return '';
+      let s = p.replace(/[()\s\-\.]/g, '');
+      if (s.length === 11 && s[0] === '0') s = s.slice(1);
+      return s;
+    }
+
+    function validateInput({name, grade, email, phone, password}) {
+      if (!name || !grade || !email || !phone || !password) return 'Please fill all fields.';
+      if (password.length < 6) return 'Password must be at least 6 characters.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Invalid email address.';
+      return null;
+    }
+
+    // ---------- typing animation ----------
     (function typewriterRegister(){
       const el = document.getElementById('typingTextRegister');
       const phrases = [
@@ -132,67 +134,143 @@
       tick();
     })();
 
-    // Helpers to show messages
-    const regMsg = (text, type='info')=>{
-      const el = document.getElementById('regMsg');
-      el.textContent = text;
-      el.style.color = (type === 'error') ? '#f6a6a6' : '#bfe8c6';
-    };
+    // ---------- utility: retry/backoff ----------
+    async function retryWithBackoff(fn, attempts = 3, baseDelay = 300) {
+      let lastErr;
+      for (let i = 0; i < attempts; i++) {
+        try {
+          return await fn();
+        } catch (err) {
+          lastErr = err;
+          const delay = baseDelay * Math.pow(2, i);
+          console.warn(`Attempt ${i+1} failed, retrying after ${delay}ms`, err);
+          await new Promise(r => setTimeout(r, delay));
+        }
+      }
+      throw lastErr;
+    }
 
-    // Register flow
-    const form = document.getElementById('registerForm');
-    const btn = document.getElementById('registerBtn');
+    // ensure we write the user doc once auth is ready for that uid
+    async function writeUserDocWithAuthGuarantee(uid, payload) {
+      // wait briefly for auth.currentUser to be set (max 5s)
+      await new Promise((resolve) => {
+        if (auth.currentUser && auth.currentUser.uid === uid) { resolve(); return; }
+        const timeout = setTimeout(() => { unsubscribe && unsubscribe(); resolve(); }, 5000);
+        const unsubscribe = onAuthStateChanged(auth, (u) => {
+          if (u && u.uid === uid) { clearTimeout(timeout); unsubscribe(); resolve(); }
+        });
+      });
 
-    form.addEventListener('submit', async (e)=>{
+      // try to refresh token (non-fatal)
+      if (auth.currentUser && auth.currentUser.uid === uid) {
+        try { await auth.currentUser.getIdToken(true); } catch(e){ console.warn('getIdToken(true) failed:', e); }
+      } else {
+        console.warn('auth.currentUser not matching expected uid before write:', auth.currentUser?.uid, 'expected:', uid);
+      }
+
+      // write user doc with retry
+      await retryWithBackoff(async () => {
+        const ref = doc(db, 'users', uid);
+        return await setDoc(ref, { ...payload, createdAt: serverTimestamp() });
+      }, 3, 300);
+    }
+
+    // ---------- redirect guard: if already logged in, send away ----------
+    // We use onAuthStateChanged to know quickly when the auth state is available.
+    let authChecked = false;
+    onAuthStateChanged(auth, async (user) => {
+      if (authChecked) return; // run redirect logic only once on load
+      authChecked = true;
+
+      if (user) {
+        // user is logged in -> redirect to admin/dashboard based on claims
+        try {
+          const idRes = await user.getIdTokenResult();
+          const claims = idRes.claims || {};
+          if (claims.superAdmin || claims.isSuperAdmin || claims.admin || claims.isAdmin) {
+            window.location.replace('admin.html');
+          } else {
+            window.location.replace('dashboard.html');
+          }
+          return; // stop further setup
+        } catch (err) {
+          // if any error, fallback to dashboard
+          console.warn('id token check failed, redirecting to dashboard', err);
+          window.location.replace('dashboard.html');
+          return;
+        }
+      }
+
+      // if no user, proceed to initialize the registration handlers (the page stays visible)
+      // (we do NOT re-import or re-init auth/app here; everything already set)
+    });
+
+    // ---------- form submit ----------
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      regMsg('', 'info');
+      regMsg('Registering... please wait', 'info');
+      regBtn.disabled = true;
+      regBtn.textContent = 'Registering...';
 
       const name = document.getElementById('name').value.trim();
       const grade = document.getElementById('grade').value.trim();
       const email = document.getElementById('email').value.trim();
-      const phone = document.getElementById('phone').value.trim();
+      const phoneRaw = document.getElementById('phone').value.trim();
+      const phone = normalizePhone(phoneRaw);
       const password = document.getElementById('password').value;
 
-      if(!name || !grade || !email || !phone || !password){
-        regMsg('Please fill all fields.', 'error');
+      const inputError = validateInput({name, grade, email, phone, password});
+      if (inputError) {
+        regMsg(inputError, 'error');
+        regBtn.disabled = false;
+        regBtn.textContent = 'Register';
         return;
       }
 
-      btn.disabled = true;
-      btn.textContent = 'Registering...';
-
-      try{
-        // create user
+      try {
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCred.user;
 
-        // update displayName
-        await updateProfile(user, { displayName: name });
+        try { await updateProfile(user, { displayName: name }); } catch (upErr) { console.warn('updateProfile failed (non-fatal):', upErr); }
 
-        // store profile in Firestore under collection 'users' with doc id = uid
-        await setDoc(doc(db, 'users', user.uid), {
-          name,
-          grade,
-          email,
-          phone,
-          createdAt: serverTimestamp()
-        });
+        const payload = { name, grade, email, phone };
+        try {
+          await writeUserDocWithAuthGuarantee(user.uid, payload);
+        } catch (writeErr) {
+          console.error('Failed to write user document:', writeErr);
+          const errMsg = (writeErr && writeErr.code === 'permission-denied')
+            ? 'Permission denied when saving profile. Check Firestore rules.'
+            : (writeErr && writeErr.message) ? writeErr.message : 'Failed to save profile to Firestore.';
+          regMsg(`Registered in Auth but failed to save profile: ${errMsg}`, 'error');
+          regBtn.disabled = false;
+          regBtn.textContent = 'Register';
+          return;
+        }
 
         regMsg('Registered successfully! Redirecting...', 'info');
+        setTimeout(() => { window.location.href = '/code-clash/'; }, 900);
 
-        // optionally redirect after short delay
-        setTimeout(()=>{ window.location.href = '/code-clash/'; }, 900);
-
-      } catch(err){
-        // show friendly error
-        const msg = err?.message || String(err);
-        regMsg(msg, 'error');
-        console.error('Register error', err);
+      } catch (err) {
+        console.error('Registration error:', err);
+        let message = 'Registration failed.';
+        if (err?.code) {
+          switch (err.code) {
+            case 'auth/email-already-in-use': message = 'This email is already in use.'; break;
+            case 'auth/invalid-email': message = 'Invalid email address.'; break;
+            case 'auth/weak-password': message = 'Password is too weak. Use at least 6 characters.'; break;
+            default: message = err.message || message;
+          }
+        } else if (err?.message) {
+          message = err.message;
+        }
+        regMsg(message, 'error');
       } finally {
-        btn.disabled = false;
-        btn.textContent = 'Register';
+        regBtn.disabled = false;
+        regBtn.textContent = 'Register';
       }
     });
+
+    console.info('Register page initialized (single Firebase module).');
   </script>
 </body>
 </html>
