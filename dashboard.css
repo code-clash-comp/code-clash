@@ -510,4 +510,11 @@
     outline: none;
   }
   .mobile-menu { right: 8px; left: 8px; top: calc(100% + 8px); min-width: auto; }
+
+  .page-title {
+    margin: 30px 0 0 10px
+  }
+  .typing-line {
+    margin: 0 0 0 10px;
+  }
 }
