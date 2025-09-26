@@ -714,8 +714,6 @@ function renderColorOptions(){
   document.querySelectorAll('.color-option').forEach(b=> b.classList.remove('selected'));
   if(first) first.classList.add('selected');
 }
-
-
   function openModal(){
     if(currentUserIsAdmin){
       modalMsg.style.color = '#f6a6a6';
@@ -975,5 +973,166 @@ function renderColorOptions(){
   // ensure UI starts in a consistent state
   showAllMiniValues();
   showLoggedOut();
+
+})();
+
+(async function(){
+  // Try to reuse existing app if present, otherwise init using same config
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
+    authDomain: "code-clash-2025.firebaseapp.com",
+    projectId: "code-clash-2025",
+    storageBucket: "code-clash-2025.firebasestorage.app",
+    messagingSenderId: "13717806434",
+    appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
+    measurementId: "G-0BMTHMYMEL"
+  };
+
+  // DOM
+  const annCard = document.getElementById('annCard');
+  const annCardList = document.getElementById('annCardList');
+  const annListModal = document.getElementById('annListModal');
+  const annModalList = document.getElementById('annModalList');
+  const annModalClose = document.getElementById('annModalClose');
+
+  const annFullModal = document.getElementById('annFullModal');
+  const annFullTitle = document.getElementById('annFullTitle');
+  const annFullMeta = document.getElementById('annFullMeta');
+  const annFullBody = document.getElementById('annFullBody');
+  const annFullClose = document.getElementById('annFullClose');
+
+  // open/close helpers
+  function openModal(mod){ mod.setAttribute('aria-hidden','false'); mod.classList.add('open'); document.body.style.overflow='hidden'; }
+  function closeModal(mod){ mod.setAttribute('aria-hidden','true'); mod.classList.remove('open'); document.body.style.overflow=''; }
+
+  if(annModalClose) annModalClose.addEventListener('click', ()=> closeModal(annListModal));
+  if(annFullClose) annFullClose.addEventListener('click', ()=> closeModal(annFullModal));
+
+  // clicking card opens modal (also keyboard)
+  if(annCard){
+    annCard.addEventListener('click', ()=> openModal(annListModal));
+    annCard.addEventListener('keydown', (e)=> { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(annListModal); } });
+  }
+
+  // initialize firebase only if not present (avoid double init)
+  const [{ initializeApp, getApps }, { getFirestore, collection, query, orderBy, onSnapshot }, { getAuth }] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
+    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js'),
+  ]).catch(err => { console.warn('Firebase import failed for announcements widget', err); return []; });
+
+  if(typeof initializeApp === 'function' && getApps && getApps().length === 0){
+    initializeApp(FIREBASE_CONFIG);
+  }
+
+  // graceful exit if firestore not available
+  if(typeof getFirestore !== 'function'){
+    console.warn('Firestore not available, announcements widget disabled.');
+    if(annCardList) annCardList.innerHTML = '<div class="ann-loading">Announcements unavailable</div>';
+    return;
+  }
+
+  const db = getFirestore();
+  const annCol = collection(db, 'announcements');
+  const q = query(annCol, orderBy('createdAt','desc'));
+
+  // snapshot listener (published only)
+  onSnapshot(q, (snap) => {
+    const arr = [];
+    snap.forEach(d => {
+      const data = d.data() || {};
+      // show only published announcements to dashboard participants
+      if(data.published) arr.push({ id: d.id, ...data });
+    });
+
+    // pinned first (if any)
+    arr.sort((a,b) => {
+      if(!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+      const at = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+      const bt = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+      return bt - at; // recent first
+    });
+
+    renderCardList(arr);
+    renderModalList(arr);
+  }, (err) => {
+    console.error('Announcements listener error', err);
+    if(annCardList) annCardList.innerHTML = '<div class="ann-loading">Failed to load</div>';
+  });
+
+  // render compact items inside card
+  function renderCardList(items){
+    if(!annCardList) return;
+    if(items.length === 0){
+      annCardList.innerHTML = '<div class="ann-loading">No announcements</div>';
+      annCardList.setAttribute('data-overflow','false');
+      return;
+    }
+    annCardList.innerHTML = '';
+    for(const it of items){
+      const node = document.createElement('div');
+      node.className = 'ann-item';
+      node.innerHTML = `<div class="i-title">${escapeHtml(it.title || '(untitled)')}</div>
+                        <div class="i-excerpt">${escapeHtml((it.body||'').slice(0,140))}${(it.body||'').length>140 ? '…' : ''}</div>`;
+      // clicking on compact item opens the full modal
+      node.addEventListener('click', (e)=> {
+        e.stopPropagation();
+        openFullAnnouncement(it);
+      });
+      annCardList.appendChild(node);
+    }
+
+    // check if content overflows the fixed height -> show fade if yes
+    const overflow = annCardList.scrollHeight > annCardList.clientHeight;
+    annCardList.setAttribute('data-overflow', overflow ? 'true' : 'false');
+  }
+
+  // render list in modal
+  function renderModalList(items){
+    if(!annModalList) return;
+    annModalList.innerHTML = '';
+    if(items.length === 0){
+      annModalList.innerHTML = '<div class="ann-loading">No announcements available</div>';
+      return;
+    }
+
+    for(const it of items){
+      const row = document.createElement('div');
+      row.className = 'ann-row';
+      const created = it.createdAt?.toDate ? new Date(it.createdAt.toDate()).toLocaleString() : '';
+      row.innerHTML = `<div class="left">
+                         <div class="t">${escapeHtml(it.title || '(untitled)')}</div>
+                         <div class="excerpt">${escapeHtml(((it.body||'').slice(0,240)) + ((it.body||'').length>240 ? '…' : ''))}</div>
+                       </div>
+                       <div class="meta">${created}${it.pinned ? ' • Pinned' : ''}</div>`;
+      row.addEventListener('click', ()=> { openFullAnnouncement(it); });
+      annModalList.appendChild(row);
+    }
+  }
+
+  // open big full announcement modal
+  function openFullAnnouncement(it){
+    if(!annFullModal) return;
+    annFullTitle.textContent = it.title || '(untitled)';
+    const created = it.createdAt?.toDate ? new Date(it.createdAt.toDate()).toLocaleString() : '';
+    annFullMeta.textContent = `${created} • ${it.pinned ? 'Pinned' : ''}`;
+    annFullBody.textContent = it.body || '';
+    openModal(annFullModal);
+  }
+
+  // small utils
+  function escapeHtml(s){
+    if(!s) return '';
+    return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  // close modals on backdrop / esc
+  document.addEventListener('click', (e)=>{
+    if(e.target === annListModal) closeModal(annListModal);
+    if(e.target === annFullModal) closeModal(annFullModal);
+  });
+  document.addEventListener('keydown', (e)=> {
+    if(e.key === 'Escape'){ if(annFullModal && annFullModal.getAttribute('aria-hidden') === 'false') closeModal(annFullModal); else if(annListModal && annListModal.getAttribute('aria-hidden') === 'false') closeModal(annListModal); }
+  });
 
 })();

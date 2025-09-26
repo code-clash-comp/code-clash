@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin Panel | Code Clash 2025</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="admin.css">
   <script type="module" src="admin.js"></script>
   <link rel="icon" type="image/png" href="logo.png">
@@ -27,6 +28,104 @@
         <h2 class="admin-title">Admin Panel</h2>
         <div class="admin-sub">View registered participants • manage admin roles • quick audit</div>
       </div>
+
+      <!-- ANNOUNCEMENTS CARD (placed above stats-search-row per request) -->
+      <div id="announcementsCard" class="announce-card" style="width:100%;">
+        <div class="announce-left">
+          <div style="display:flex; gap:10px; align-items:center;">
+            <div style="min-width:46px; text-align:center;">
+              <div style="font-weight:900; font-size:18px; color:var(--accent);">📢</div>
+            </div>
+            <div style="min-width:0;">
+              <h3 class="announce-title">Announcements</h3>
+              <div class="announce-sub">Broadcast news to participants — pin an important update so it stays on top.</div>
+            </div>
+          </div>
+
+          <div id="pinnedAnnouncementArea" style="margin-top:10px; display:none;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <div class="pinned-badge">Pinned</div>
+              <div id="pinnedTitle" style="font-weight:800; color:#e8f6e8;"></div>
+            </div>
+            <div id="pinnedExcerpt" class="announce-sub" style="margin-top:6px;"></div>
+          </div>
+        </div>
+
+        <div class="announce-actions">
+          <!-- Create announcement form toggle -->
+          <button id="toggleCreateAnn" class="btn" title="Create new announcement">New Announcement</button>
+        </div>
+
+        <div id="announcementModal" class="modal announcement-modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-panel">
+          <div style="display:flex; gap:12px; align-items:flex-start; justify-content:space-between;">
+            <div>
+              <div id="modalAnnTitle" style="font-weight:900; font-size:18px; color:var(--accent)"></div>
+              <div id="modalAnnMeta" class="small-muted" style="margin-top:6px;"></div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button id="modalEditBtn" class="btn">Edit</button>
+              <button id="modalCloseBtn" class="btn">Close</button>
+            </div>
+          </div>
+          <div id="modalAnnBody" class="announcement-body"></div>
+
+          <!-- edit area (hidden until edit clicked) -->
+          <div id="modalEditArea" style="display:none; margin-top:12px;">
+            <input id="modalEditTitle" type="text" />
+            <textarea id="modalEditBody" style="margin-top:8px;"></textarea>
+            <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+              <label class="custom-toggle">
+                <input id="modalEditPublished" type="checkbox" />
+                <span class="toggle-ui" aria-hidden="true"></span>
+                <span class="toggle-label">Published</span>
+              </label>
+              <label class="custom-toggle">
+                <input id="modalEditPinned" type="checkbox" />
+                <span class="toggle-ui" aria-hidden="true"></span>
+                <span class="toggle-label">Pinned (super-admin)</span>
+              </label>
+              <div style="margin-left:auto; display:flex; gap:8px;">
+                <button id="modalSaveEdit" class="btn primary">Save</button>
+                <button id="modalDelete" class="btn destructive">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <section id="createAnnSection" class="panel" style="display:none; margin-top:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-weight:800; color:var(--accent)">Create Announcement</div>
+          <div class="small-muted">Admins may create announcements. Super-admins may pin.</div>
+        </div>
+
+        <form id="announceForm" class="announce-form" autocomplete="off" style="margin-top:12px;">
+          <input id="annTitle" type="text" placeholder="Title (short)" maxlength="180" />
+          <textarea id="annBody" placeholder="Write the announcement content here..."></textarea>
+
+          <div class="announce-ctrls">
+            <label class="custom-toggle">
+              <input id="annPublished" type="checkbox" />
+              <span class="toggle-ui" aria-hidden="true"></span>
+              <span class="toggle-label">Publish now</span>
+            </label>
+
+            <label id="pinControl" class="custom-toggle" style="display:flex; align-items:center;">
+              <input id="annPinned" type="checkbox" />
+              <span class="toggle-ui" aria-hidden="true"></span>
+              <span class="toggle-label">Pin (super-admin only)</span>
+            </label>
+
+            <div style="margin-left:auto; display:flex; gap:8px;">
+              <button id="saveAnnBtn" class="btn primary" type="submit">Save</button>
+              <button id="cancelAnnBtn" type="button" class="btn">Cancel</button>
+            </div>
+          </div>
+        </form>
+      </section>
 
       <div class="stats-search-row">
         <div class="left-stats">
@@ -75,9 +174,14 @@
       </div>
     </header>
 
-    <section class="panel">
+    <section class="panel" style="margin-top:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-weight:800; color:var(--accent)">Users</div>
+        <div class="small-muted">Manage users, promote/demote, copy email</div>
+      </div>
+
       <!-- table is wrapped so it scrolls inside the panel and actions never spill out -->
-      <div class="table-wrap" role="region" aria-label="Users table scroll area">
+      <div class="table-wrap" role="region" aria-label="Users table scroll area" style="margin-top:12px;">
         <table class="admin-table" id="usersTable" aria-live="polite">
           <thead>
             <tr>
@@ -97,6 +201,8 @@
           </tbody>
         </table>
       </div>
+  <div style="font-weight:800; color:var(--accent); margin-top: 30px;">Announcements</div>
+      <div id="announcementsList" class="announce-list" style="margin-top:12px;"></div>
     </section>
   </div>
 

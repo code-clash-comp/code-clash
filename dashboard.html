@@ -130,7 +130,61 @@
             <button id="deleteAccountBtn" class="btn destructive" title="Permanently delete your account and profile">Delete account</button>
           </div>
         </div>
-      </section>
+      </section>            
+                <!-- Announcements card (drop this where the dashboard cards live) -->
+      <div id="annCard" class="ann-card" role="button" aria-haspopup="dialog" tabindex="0" title="View announcements">
+        <div class="ann-card-inner">
+          <div class="ann-card-head">
+            <div>
+              <div class="panel-title">Announcements</div>
+              <div class="ann-sub">Latest updates for participants - click to view all</div>
+            </div>
+          </div>
+
+          <div id="annCardList" class="ann-card-list" aria-live="polite" aria-atomic="false">
+            <!-- announcement items injected here (short lines/excerpts) -->
+            <div class="ann-loading">Loading…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: list of announcements -->
+      <div id="annListModal" class="modal ann-list-modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-panel">
+          <div class="modal-header">
+            <div>
+              <div class="modal-title">Announcements</div>
+              <div class="small-muted">All recent published announcements</div>
+            </div>
+            <div>
+              <button id="annModalClose" class="btn">Close</button>
+            </div>
+          </div>
+
+          <div id="annModalList" class="ann-modal-list">
+            <!-- list injected here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: single announcement full view -->
+      <div id="annFullModal" class="modal ann-full-modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-panel">
+          <div class="modal-header">
+            <div>
+              <div id="annFullTitle" class="modal-title"></div>
+              <div id="annFullMeta" class="small-muted-meta" style="margin-top:6px;"></div>
+            </div>
+            <div>
+              <button id="annFullClose" class="btn">Close</button>
+            </div>
+          </div>
+          <div id="annFullBody" class="ann-full-body"></div>
+        </div>
+      </div>
+
 
       <section class="panel teams-panel" style="margin-top:12px;">
         <div class="panel-title">Teams</div>
