@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rules & Info | PyCode Clash 2025</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <script type="module" src="dashboard.js"></script>
+  <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+  <div class="page-container">
+    <!-- NAV -->
+    <div class="nav" style="position:relative;">
+      <div class="nav-name">
+        <h1 class="nav-name-title">&lt;/&gt; PyCode Clash 2025</h1>
+      </div>
+
+      <div class="nav-actions">
+        <button id="navAdmin" class="nav-actions-admin" style="display:none;">Admin Panel</button>
+        <button id="navRegister" class="nav-actions-register">Home</button>
+        <button id="navLogin" class="nav-actions-login">Logout</button>
+      </div>
+
+      <!-- Mobile hamburger -->
+      <button id="mobileMenuBtn" class="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
+
+      <!-- Mobile menu -->
+      <div id="mobileMenu" class="mobile-menu" role="menu" aria-hidden="true">
+        <div class="mobile-menu-inner"></div>
+      </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="dashboard-header container">
+      <h2 class="page-title">Competition Rules & Info</h2>
+      <div class="typing-line" style="margin: 8px 0 20px 0;">
+        <span id="typingText" class="typing-text"></span><span class="cursor" aria-hidden="true"></span>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT - single column -->
+    <main class="container">
+      <!-- Date & Time -->
+      <section class="panel">
+        <div class="panel-title">Date &amp; Time</div>
+        <div class="small muted" style="margin-top:8px;">
+          <strong>Event Date:</strong> <span>18 October 2025</span><br>
+          <strong>Event Time:</strong> <span>11:00 AM - 2:00 PM</span><br>
+          <div style="margin-top:8px;" class="small-muted">
+            Participants should join the main call at <strong>11:00 AM</strong> for the introduction and orientation.
+          </div>
+        </div>
+      </section>
+
+      <!-- Participant & Team Counts (live, excludes admins) -->
+      <section class="panel">
+        <div class="panel-title">Participants &amp; Teams</div>
+        <div style="margin-top:8px;">
+          <div style="margin-top:10px;" class="progress-bar"><div id="regProgress"></div></div>          
+          <div class="small muted">
+            <strong>Participants:</strong> <span id="liveParticipants">-</span> / 32<br>
+            <strong>Teams:</strong> <span id="liveTeams">-</span> / 8<br>
+            <strong>Participants per Team:</strong> 4
+          </div>
+        </div>
+      </section>
+
+      <!-- Format (use original wording: 1v1 duels, team points, tiebreaker fastest solution) -->
+      <section class="panel">
+        <div class="panel-title">Format</div>
+        <div class="small muted" style="margin-top:8px;">
+          <p class="panel-sub">This is a <strong>Python</strong> coding competition. All solutions must be written in Python.</p>
+
+          <ol class="format-list" aria-label="Competition format">
+            <li class="format-item"><strong>Structure:</strong> 1v1 knockout duels between participants. Teams accumulate points based on duel wins.</li>
+            <li class="format-item"><strong>Team scoring:</strong> Each individual win adds a fixed number of points to that participant's team total. Team with most points advances in team standings.</li>
+            <li class="format-item"><strong>Tiebreaker:</strong> If teams are tied, the tie is resolved by <em>average correct solution time of the team</em>. If still tied, judges will apply secondary tie rules (e.g., minimal code size or extra micro-challenge).</li>
+            <li class="format-item"><strong>Bracket progression:</strong> 16 Teams → 12 Teams → 8 Teams → 4 Teams → 2 Teams → <strong>Champion Team</strong></li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- Rules & Regulations -->
+      <section class="panel">
+        <div class="panel-title">Rules &amp; Regulations</div>
+        <div class="small muted" style="margin-top:8px;">
+          <ul style="margin-left:18px;">
+            <li><strong>No cheating:</strong> No external collaboration, copying, or sharing answers. Cheating will lead to disqualification.</li>
+            <li><strong>Language:</strong> Python only — submissions in other languages will be rejected.</li>
+            <li><strong>Time limits:</strong> Each duel has a strict time limit of 10 minutes. If both parties fail to finish in the given time limit, they will compete again.</li>
+            <li><strong>Penalties:</strong> Intentional disruption, misbehavior, or repeated rule violations may result in penalties or disqualification.</li>
+            <li><strong>Disconnections & rare cases:</strong> If a participant disconnects during a duel, judges will attempt reconnection; decisions are at judge's discretion.</li>
+            <li><strong>Judging:</strong> Judge decisions are final. Judges evaluate correctness, and timing for tiebreakers.</li>
+          </ul>
+          <div class="panel-note small muted" style="margin-top:10px;">
+            <span class="placeholder">Any other unexpected discrepancies on the day of the event will be handled by the organisers.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Prize Pool -->
+      <section class="panel">
+        <div class="panel-title">Prize Pool</div>
+        <div class="small muted" style="margin-top:8px;">
+          <div class="placeholder">Prize details will be announced soon. Prizes reserved for 1st / 2nd / 3rd prizes.</div>
+        </div>
+      </section>
+
+      <!-- FAQs -->
+      <section class="panel">
+        <div class="panel-title">FAQs</div>
+        <div class="small muted" style="margin-top:8px;">
+          <p><strong>Q:</strong> What do I need?<br><strong>A:</strong> A computer with Python, a code editor, and a stable internet connection.</p>
+          <p><strong>Q:</strong> What if I don't have a team?<br><strong>A:</strong> Solo registrants will be matched into teams where possible.</p>
+          <p><strong>Q:</strong> What if a person from my team doesn't show up?<br><strong>A:</strong> Teammates can fill in for the missing person, as long as atleast 2 people show up in the team.</p>
+        </div>
+      </section>
+
+      <!-- Contact -->
+      <section class="panel" style="margin-bottom: 40px;">
+        <div class="panel-title">Contact</div>
+        <div class="small muted" style="margin:8px;">
+          For questions email <a class="mail-link" href="mailto:organisers@codeclash.com">codeclashcomp@gmail.com</a>. WhatsApp group link will be shared after registration.
+        </div>
+      </section>
+    </main>
+
+    <footer class="page-foot muted-no-margin">Hosted on GitHub Pages · Good luck and have fun!</footer>
+  </div>
+  <script type="module">
+(async function(){
+  // ---------- CONFIG ----------
+  const target = new Date('2025-10-18T11:00:00').getTime();
+  const MAX_PARTICIPANTS = 32;
+
+  const phrases = [
+    "Python-only challenges — think and code fast.", 
+    "Fair play. Fast solutions. Fun competition.", 
+    "Brush up on algorithms and I/O handling."
+  ];
+
+  // ---------- TYPING ANIMATION ----------
+  (function typing(){
+    const el = document.getElementById('typingText');
+    if(!el) return;
+    let p = 0, ch = 0, deleting = false;
+    const typingSpeed = 45, pauseAfter = 900;
+    function tick(){
+      const cur = phrases[p];
+      if(!deleting){
+        el.textContent = cur.slice(0, ch+1);
+        ch++;
+        if(ch === cur.length){
+          deleting = true;
+          setTimeout(tick, pauseAfter);
+          return;
+        }
+      } else {
+        el.textContent = cur.slice(0, ch-1);
+        ch--;
+        if(ch === 0){
+          deleting = false;
+          p = (p+1) % phrases.length;
+        }
+      }
+      setTimeout(tick, deleting ? typingSpeed/1.2 : typingSpeed);
+    }
+    tick();
+  })();
+
+  // ---------- COUNTDOWN ----------
+  (function countdown(){
+    const dEl = document.getElementById('cdDays');
+    const hEl = document.getElementById('cdHours');
+    const mEl = document.getElementById('cdMins');
+    const sEl = document.getElementById('cdSecs');
+    if(!dEl || !hEl || !mEl || !sEl) return;
+    function update(){
+      const now = Date.now();
+      let diff = target - now;
+      if(diff <= 0){
+        dEl.textContent='00'; hEl.textContent='00'; mEl.textContent='00'; sEl.textContent='00';
+        return;
+      }
+      const secs = Math.floor(diff/1000);
+      const days = Math.floor(secs/86400);
+      const hours = Math.floor((secs%86400)/3600);
+      const mins = Math.floor((secs%3600)/60);
+      const s = secs%60;
+      dEl.textContent = String(days).padStart(2,'0');
+      hEl.textContent = String(hours).padStart(2,'0');
+      mEl.textContent = String(mins).padStart(2,'0');
+      sEl.textContent = String(s).padStart(2,'0');
+    }
+    update();
+    setInterval(update,1000);
+  })();
+
+  // ---------- DOM refs ----------
+  const navLogin = document.getElementById('navLogin');
+  const navRegister = document.getElementById('navRegister');
+  const navDashboard = document.getElementById('navDashboard'); 
+  const bigReg = document.getElementById('bigRegister');
+  const welcomeMsg = document.getElementById('welcomeMsg');
+  const participantsEl = document.getElementById('participantsCount');
+  const liveRegEl = document.getElementById('liveReg');
+  const slotsLeftEl = document.getElementById('slotsLeft');
+  const progressFill = document.getElementById('progressFill');
+
+  // ---------- helpers ----------
+  function doPulse(el){ if(!el) return; el.classList.add('pulse'); setTimeout(()=> el.classList.remove('pulse'), 420); }
+  function updateCounterUI(count){
+    if(participantsEl) participantsEl.textContent = String(MAX_PARTICIPANTS);
+    if(liveRegEl) liveRegEl.textContent = String(count);
+    const slotsLeft = Math.max(0, MAX_PARTICIPANTS - count);
+    if(slotsLeftEl) slotsLeftEl.textContent = String(slotsLeft);
+    const pct = Math.min(100, Math.round((count/MAX_PARTICIPANTS)*100));
+    if(progressFill) progressFill.style.width = pct+'%';
+  }
+
+  // ---------- Local fallback ----------
+  function startLocalDemoCounter(){
+    function getStoredCount(){ return parseInt(localStorage.getItem('cc_reg_count')||'0',10)||0; }
+    function setStoredCount(v){ localStorage.setItem('cc_reg_count', String(v)); }
+    updateCounterUI(getStoredCount());
+
+    const registerHandler = ()=>{
+      doPulse(navRegister||bigReg);
+      if(sessionStorage.getItem('cc_registered')){ window.location.href='register.html'; return; }
+      let cnt = getStoredCount();
+      if(cnt>=MAX_PARTICIPANTS) return;
+      cnt++; setStoredCount(cnt); sessionStorage.setItem('cc_registered','1'); updateCounterUI(cnt);
+      window.location.href='register.html';
+    };
+    if(navRegister) navRegister.onclick = registerHandler;
+    if(bigReg) bigReg.onclick = registerHandler;
+    if(navLogin) navLogin.onclick = ()=>{ doPulse(navLogin); window.location.href='login.html'; };
+  }
+
+  // ---------- FIREBASE ----------
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
+    authDomain: "code-clash-2025.firebaseapp.com",
+    projectId: "code-clash-2025",
+    storageBucket: "code-clash-2025.firebasestorage.app",
+    messagingSenderId: "13717806434",
+    appId: "1:13717806434:web:8aa7799e7f87ebbdf0603b",
+    measurementId: "G-0BMTHMYMEL"
+  };
+
+  async function startFirebase(){
+    try{
+      const [{ initializeApp }, { getFirestore, collection, onSnapshot, doc, getDoc }, { getAuth, onAuthStateChanged, signOut }] = await Promise.all([
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
+        import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js')
+      ]);
+
+      const app = initializeApp(FIREBASE_CONFIG);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+
+      async function resolveAdminForUser(user){
+        if(!user) return false;
+        try{
+          const tokenRes = await user.getIdTokenResult(true);
+          const claims = tokenRes.claims||{};
+          if(claims.admin||claims.isAdmin||claims.superAdmin||claims.isSuperAdmin) return true;
+        } catch(e){ console.warn('Token check failed', e); }
+        try{
+          const udoc = await getDoc(doc(db,'users',user.uid));
+          if(udoc.exists()){
+            const data = udoc.data();
+            if(data.isAdmin||data.isSuperAdmin) return true;
+          }
+        } catch(e){ console.warn('User doc admin check failed', e); }
+        return false;
+      }
+
+      // live participant counter
+      onSnapshot(collection(db,'users'), snap=>{
+        try{
+          const docs = snap.docs.map(d=>({ uid:d.id, ...(d.data()||{}) }));
+          const nonAdminCount = docs.filter(u=>!u.isAdmin && !u.isSuperAdmin).length;
+          updateCounterUI(nonAdminCount);
+        } catch(e){ console.error(e); updateCounterUI(snap.size); }
+      });
+
+      onAuthStateChanged(auth, async user=>{
+        if(user){
+          if(navRegister){ navRegister.textContent='Dashboard'; navRegister.onclick=()=>{ doPulse(navRegister); window.location.href='dashboard.html'; }; }
+          if(navLogin){ navLogin.textContent='Logout'; navLogin.onclick=async()=>{ doPulse(navLogin); if(confirm('Logout?')) await signOut(auth); }; }
+          if(bigReg){ bigReg.textContent='Go to Dashboard'; bigReg.onclick=()=>{ doPulse(bigReg); window.location.href='dashboard.html'; }; }
+          if(welcomeMsg){ welcomeMsg.textContent=`Welcome, ${user.displayName||user.email||'Participant'}`; welcomeMsg.style.display='block'; }
+
+          const isAdmin = await resolveAdminForUser(user);
+          if(navDashboard){
+            navDashboard.style.display = isAdmin?'inline-block':'none';
+            if(isAdmin) navDashboard.onclick=()=>{ doPulse(navDashboard); window.location.href='admin.html'; };
+          }
+        } else {
+          if(navRegister){ navRegister.textContent='Register'; navRegister.onclick=()=>{ doPulse(navRegister); window.location.href='register.html'; }; }
+          if(navLogin){ navLogin.textContent='Login'; navLogin.onclick=()=>{ doPulse(navLogin); window.location.href='login.html'; }; }
+          if(bigReg){ bigReg.textContent='Register for Code Clash 2025'; bigReg.onclick=()=>{ doPulse(bigReg); window.location.href='register.html'; }; }
+          if(welcomeMsg){ welcomeMsg.textContent=''; welcomeMsg.style.display='none'; }
+          if(navDashboard){ navDashboard.style.display='none'; navDashboard.onclick=null; }
+        }
+      });
+
+    } catch(err){
+      console.warn('Firebase failed, using local fallback', err);
+      startLocalDemoCounter();
+      if(navRegister) navRegister.onclick=()=>{ doPulse(navRegister); window.location.href='register.html'; };
+      if(navLogin) navLogin.onclick=()=>{ doPulse(navLogin); window.location.href='login.html'; };
+      if(navDashboard) navDashboard.style.display='none';
+    }
+  }
+
+  await startFirebase();
+
+})();
+</script>
+
+
+</body>
+</html>

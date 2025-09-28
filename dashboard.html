@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard | Code Clash 2025</title>
+  <title>Dashboard | PyCode Clash 2025</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="dashboard.css">
   <script type="module" src="dashboard.js"></script>
@@ -13,7 +13,7 @@
   <div class="page-container">
     <div class="nav" style="position:relative;">
       <div class="nav-name">
-        <h1 class="nav-name-title">&lt;/&gt; Code Clash 2025</h1>
+        <h1 class="nav-name-title">&lt;/&gt; PyCode Clash 2025</h1>
       </div>
 
       <div class="nav-actions">
@@ -127,8 +127,9 @@
 
           <!-- DELETE ACCOUNT BUTTON -->
           <div style="margin-top:12px;">
+            <button class="btn" style="border: 1px solid #70d45e28;" onclick="window.location.href = 'rules.html'">Go to Rules and Info</button>
             <button id="deleteAccountBtn" class="btn destructive" title="Permanently delete your account and profile">Delete account</button>
-          </div>
+            </div>
         </div>
       </section>            
                 <!-- Announcements card (drop this where the dashboard cards live) -->
@@ -186,7 +187,7 @@
       </div>
 
 
-      <section class="panel teams-panel" style="margin-top:12px;">
+      <section class="panel teams-panel" style="margin-top:12px; margin-bottom: 40px;">
         <div class="panel-title">Teams</div>
         <div class="small muted">Create or join a team. Max 8 teams total.</div>
 
@@ -200,10 +201,10 @@
       </section>
     </main>
 
-    <main class="container" style="margin-top:18px; margin-bottom:40px;">
+    <main class="container" style="display: none;">
       <section class="panel">
         <div class="panel-title">Competition Details</div>
-        <div id="compDetails" class="small muted" style="margin-top:8px">
+        <div id="compDetails" class="small muted" style="margin-top:8px; display: none;">
           <strong>Format:</strong> 1v1 duels, teams earn points.<br>
           <strong>Participants max:</strong> <span id="cMax">32</span><br>
           <strong>Teams max:</strong> 8<br>
@@ -212,6 +213,8 @@
         </div>
       </section>
     </main>
+
+    <!-- add the button to rules here -->
 
     <footer class="page-foot muted-no-margin">Hosted on GitHub Pages · Good luck and have fun!</footer>
 

@@ -184,6 +184,11 @@ button, input {
 
 /* BIG REGISTER CTA */
 .register-cta-wrapper{ margin-top:18px; display:flex; flex-direction:column; align-items:flex-start; gap:8px }
+.register-cta-btns {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
 .big-register{
   background: linear-gradient(90deg, rgba(110,174,110,1), rgba(95,160,95,0.95));
   color: var(--bg);

@@ -333,7 +333,7 @@
           note = document.createElement('div');
           note.id = 'adminTeamsNote';
           note.className = 'admin-disabled-note small muted';
-          note.textContent = 'You are an admin — you cannot join or manage teams as a participant.';
+          note.textContent = 'You are an admin - you cannot join or manage teams.';
           controls.insertAdjacentElement('afterend', note);
         }
       } else {

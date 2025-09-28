@@ -699,3 +699,11 @@
 .small-muted-meta {
   font-size: 14px;
 }
+.rules-btn {
+  cursor: pointer;
+  border: 1px solid rgba(122, 122, 122, 0.266);
+  background-color: transparent;
+  color: var(--accent);
+  padding: 10px 50px;
+  border-radius: 10px;
+}
