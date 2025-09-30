@@ -22,7 +22,6 @@
   setMobileVisibility();
   window.addEventListener('resize', setMobileVisibility);
 
-  // returns true if element has inline style display:none or hidden attribute
   function explicitlyHidden(el){
     if(!el) return true;
     if(el.hidden) return true;
@@ -31,18 +30,13 @@
     return false;
   }
 
-  // include canonical items even if CSS media rules hide desktop nav on mobile
   function shouldInclude(el){
     if(!el) return false;
-    // explicit inline hiding => definitely exclude
     if(explicitlyHidden(el)) return false;
-    // if it has attribute data-force-mobile="true" include
     if(el.getAttribute && el.getAttribute('data-force-mobile') === 'true') return true;
-    // otherwise include by default (we want menu usable for unauthed users)
     return true;
   }
 
-  // canonical action fallback (guaranteed navigation even if desktop handlers absent)
   function performCanonicalActionById(id){
     switch(id){
       case 'navRegister':
@@ -52,7 +46,6 @@
         window.location.href = 'login.html';
         return;
       case 'navDashboard':
-        // prefer dashboard; if admin link is visible on desktop it will be shown separately
         window.location.href = 'dashboard.html';
         return;
       default:
@@ -61,32 +54,25 @@
   }
 
   function proxyClickToOriginal(orig, menuBtn){
-    // hide menu first
     menu.setAttribute('aria-hidden','true');
     btn.setAttribute('aria-expanded','false');
 
-    // if original element has a direct onclick function, call it
     try {
       if(orig && typeof orig.onclick === 'function'){
         orig.onclick();
         return;
       }
-      // if original has a data-action attribute, trust it (not common, but helpful)
       const dataAction = orig && orig.getAttribute && orig.getAttribute('data-action');
       if(dataAction){
-        // common patterns: "logout", "open-dashboard" etc.
         if(dataAction === 'logout'){
-          // try to trigger click (some pages attach handler to element)
           try { orig.click(); } catch(e){ /* ignore */ }
           return;
         }
       }
-      // otherwise perform canonical fallback if available
       if(orig && orig.id && canonicalIds.includes(orig.id)){
         performCanonicalActionById(orig.id);
         return;
       }
-      // last resort: call click() on the original to fire listeners attached via addEventListener
       if(orig && typeof orig.click === 'function'){
         orig.click();
         return;
@@ -94,16 +80,13 @@
     } catch(err){
       console.error('Mobile menu proxy click failed', err);
     }
-    // absolute fallback: do nothing (shouldn't happen)
   }
 
   function buildMobileMenu(){
     inner.innerHTML = '';
 
-    // canonical items first (deterministic order)
     for(const id of canonicalIds){
       const orig = document.getElementById(id);
-      // include if element exists AND not explicitly hidden
       if(!orig) continue;
       if(!shouldInclude(orig)) continue;
 
@@ -115,7 +98,6 @@
       inner.appendChild(b);
     }
 
-    // then include any other visible buttons from .nav-actions (avoid duplicating canonical items)
     if(desktopActions){
       Array.from(desktopActions.children).forEach(orig => {
         if(!orig) return;
@@ -166,7 +148,6 @@
     if(expanded) closeMenu(); else openMenu();
   });
 
-  // rebuild menu when desktopActions change
   const observer = new MutationObserver((mutations) => {
     if(window._menuRebuildTimer) clearTimeout(window._menuRebuildTimer);
     window._menuRebuildTimer = setTimeout(() => {
@@ -175,12 +156,10 @@
   });
   if(desktopActions) observer.observe(desktopActions, { childList: true, subtree: true, attributes: true, attributeFilter: ['style','class','hidden'] });
 
-  // also listen for explicit nav-updated event
   document.addEventListener('nav-updated', () => {
     if(window.innerWidth <= 760) buildMobileMenu();
   });
 
-  // initial build for mobile
   if(window.innerWidth <= 760) buildMobileMenu();
 
 })();
@@ -208,7 +187,11 @@
     { id: 'yellow', hex: '#ffe08a', name:'Yellow' },
     { id: 'pink',   hex: '#ffb3d1', name:'Pink' }
   ];
-  document.getElementById('teamLimitDisplay').textContent = String(TEAM_SIZE_LIMIT);
+  const teamLimitDisplay = document.getElementById('teamLimitDisplay');
+  if (teamLimitDisplay) {
+    teamLimitDisplay.textContent = String(TEAM_SIZE_LIMIT);
+  }
+
   const phrases = [
     'Are you ready to duel?',
     'Fastest correct solution wins.',
@@ -237,10 +220,9 @@
     tick();
   })();
 
-  // DOM refs + nav fix
   const navRegister = document.getElementById('navRegister');
   const navLogin = document.getElementById('navLogin');
-  const navAdmin = document.getElementById('navAdmin'); // admin quick link
+  const navAdmin = document.getElementById('navAdmin');
   navRegister.onclick = ()=> { window.location.href = '/code-clash/'; };
 
   const valName = document.getElementById('val-name');
@@ -261,7 +243,10 @@
   const teamNote = document.getElementById('teamNote');
   const createTeamBtn = document.getElementById('createTeamBtn');
   const refreshBtn = document.getElementById('refreshBtn');
-  const cMax = document.getElementById('cMax'); cMax.textContent = String(MAX_PARTICIPANTS);
+  const cMax = document.getElementById('cMax');
+  if (cMax) {
+    cMax.textContent = String(MAX_PARTICIPANTS);
+  }
 
   const teamBadgeWrap = document.getElementById('teamBadgeWrap');
   const teamBadge = document.getElementById('teamBadge');
@@ -278,11 +263,11 @@
   const modalCancelBtn = document.getElementById('modalCancelBtn');
   const modalMsg = document.getElementById('modalMsg');
 
-  const teamsPanel = document.querySelector('.teams-panel'); // used to toggle disabled-block for admins
+  const teamsPanel = document.querySelector('.teams-panel');
 
   const [
     { initializeApp },
-    { getFirestore, collection, doc, updateDoc, addDoc, onSnapshot, arrayUnion, arrayRemove, deleteDoc, runTransaction, getDoc },
+    { getFirestore, collection, doc, updateDoc, addDoc, onSnapshot, arrayUnion, arrayRemove, deleteDoc, runTransaction, getDoc, query, orderBy },
     { getAuth, onAuthStateChanged, updateProfile, updateEmail, signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider }
   ] = await Promise.all([
     import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
@@ -299,12 +284,9 @@
   let allTeams = [];
   let usersMap = {};
 
-  // admin flag (true if user is admin/superadmin)
   let currentUserIsAdmin = false;
 
-  // utility: apply admin UI changes (greying out, note, disabling create)
   function applyAdminUI(){
-    // toggle teams panel disabled appearance
     if(teamsPanel){
       if(currentUserIsAdmin){
         teamsPanel.classList.add('disabled-block');
@@ -313,7 +295,6 @@
       }
     }
 
-    // ensure createTeamBtn disabled when admin
     if(createTeamBtn){
       if(currentUserIsAdmin){
         createTeamBtn.classList.add('disabled-btn');
@@ -324,7 +305,6 @@
       }
     }
 
-    // Insert or remove admin note below teams-controls
     const controls = document.querySelector('.teams-controls');
     if(controls){
       let note = document.getElementById('adminTeamsNote');
@@ -341,7 +321,6 @@
       }
     }
 
-    // re-render teams list so buttons reflect admin mode
     renderTeamsList();
   }
 
@@ -365,14 +344,12 @@
     valEmail.textContent = currentUser?.email || currentUserDoc?.email || fallback.email || '-';
   }
 
-  // helper to show all values / hide edit areas (fixes the blanking bug)
   function showAllMiniValues(){
     document.querySelectorAll('.mini-value').forEach(el=> el.style.display = 'block');
     document.querySelectorAll('.mini-edit-area').forEach(el=> el.style.display = 'none');
   }
 
   function openEdit(field){
-    // hide everything, then show only the requested edit area
     document.querySelectorAll('.mini-value').forEach(el=>el.style.display='none');
     document.querySelectorAll('.mini-edit-area').forEach(el=>el.style.display='none');
     const editArea = document.getElementById('edit-' + field);
@@ -388,7 +365,6 @@
   }
 
   function closeEdit(field){
-    // ensure ALL fields are restored (this fixes the bug)
     showAllMiniValues();
     profileMsg.textContent = '';
   }
@@ -414,14 +390,11 @@
       const patch = {}; patch[field] = newVal || '';
       await updateDoc(userRef, patch);
 
-      // optimistic local update so other fields don't "blink" while waiting for snapshot
       if(!currentUserDoc) currentUserDoc = {};
       currentUserDoc[field] = newVal || '';
-      // if name changed, update auth displayName when possible
       if(field === 'name' && currentUser.displayName !== newVal){
         try { await updateProfile(currentUser, { displayName: newVal }); } catch(e){ console.warn('updateProfile failed', e); }
       }
-      // email update may require recent login; we attempted but show friendly message if it fails
       if(field === 'email' && newVal && newVal !== (currentUser.email || currentUserDoc?.email || '')){
         try {
           await updateEmail(currentUser, newVal);
@@ -435,7 +408,6 @@
         profileMsg.textContent = 'Saved.';
       }
 
-      // update visible values immediately
       populateMiniValues();
 
     } catch(e){
@@ -498,7 +470,6 @@
       viewBtn.onclick = (e)=> { e.preventDefault(); d.open = !d.open; };
       actions.appendChild(viewBtn);
 
-      // membership controls - create buttons but guard behavior for admin users
       const isMember = currentUser && (team.members||[]).includes(currentUser.uid);
       const userTeam = currentUser && allTeams.find(t => (t.members||[]).includes(currentUser.uid));
       const joinBtn = document.createElement('button'); joinBtn.className='btn'; joinBtn.textContent='Join';
@@ -507,7 +478,6 @@
       if(isMember) joinBtn.style.display='none'; else joinBtn.style.display='inline-block';
       if(!isMember) leaveBtn.style.display='none';
 
-      // If admin, mark them disabled and add tooltip
       if(currentUserIsAdmin){
         joinBtn.disabled = true;
         joinBtn.classList.add('disabled-btn');
@@ -516,7 +486,6 @@
         leaveBtn.classList.add('disabled-btn');
         leaveBtn.title = 'Admins cannot leave teams';
       } else {
-        // non-admin hooks preserved
         if((team.members||[]).length >= TEAM_SIZE_LIMIT) { joinBtn.disabled = true; joinBtn.classList.add('disabled-btn'); joinBtn.title='Team is full'; }
         if(userTeam && !isMember){ joinBtn.disabled = true; joinBtn.classList.add('disabled-btn'); joinBtn.title='You are in another team'; }
       }
@@ -573,17 +542,14 @@
         try{ await updateDoc(doc(db,'teams',team.id), { members: arrayRemove(currentUser.uid) }); } catch(e){ console.error('leave err', e); alert('Failed to leave (permissions?).'); }
       };
 
-      // Append membership buttons
       actions.appendChild(joinBtn);
       actions.appendChild(leaveBtn);
 
-      // Disband / captain actions only shown to non-admins (admins can't manage teams here)
       if(!currentUserIsAdmin && isCaptain){
         const dis = document.createElement('button'); dis.className='btn'; dis.textContent='Disband';
         dis.onclick = async (ev)=>{ ev.preventDefault(); if(!confirm(`Disband "${team.name}"?`)) return; try{ await deleteDoc(doc(db,'teams',team.id)); } catch(e){ console.error(e); alert('Failed to disband (permissions?).'); } };
         actions.appendChild(dis);
       } else if (currentUserIsAdmin && isCaptain) {
-        // If somehow captain but admin, show muted label instead of actions
         const admLabel = document.createElement('div'); admLabel.className='small muted'; admLabel.textContent='(Admin: cannot manage here)';
         actions.appendChild(admLabel);
       }
@@ -612,7 +578,6 @@
           promote.onclick = async ()=>{ if(!confirm(`Make ${displayName} the captain?`)) return; try{ await updateDoc(doc(db,'teams',team.id), { captainUid: uid, ownerUid: uid }); } catch(e){ console.error(e); alert('Failed to transfer captain'); } };
           right.appendChild(promote); right.appendChild(rm);
         } else if (currentUserIsAdmin && currentUser && team.captainUid === currentUser.uid && uid !== currentUser.uid){
-          // admin: show muted note
           const muted = document.createElement('div'); muted.className = 'small muted'; muted.textContent = '(admin — no actions)';
           right.appendChild(muted);
         }
@@ -640,7 +605,6 @@
       createTeamBtn.classList.add('disabled-btn'); createTeamBtn.disabled = true;
       teamNote.textContent = allTeams.length >= MAX_TEAMS ? 'Team cap reached (8).' : 'You already belong to a team.';
     } else {
-      // respect admin state
       if(!currentUserIsAdmin){
         createTeamBtn.classList.remove('disabled-btn'); createTeamBtn.disabled = false;
       } else {
@@ -670,50 +634,46 @@
     };
   }
 
-  // replace existing renderColorOptions() with this
-function renderColorOptions(){
-  colorOptions.innerHTML = '';
-  const used = new Set((allTeams || []).map(t => (t.color || '').toLowerCase()).filter(Boolean));
+  function renderColorOptions(){
+    colorOptions.innerHTML = '';
+    const used = new Set((allTeams || []).map(t => (t.color || '').toLowerCase()).filter(Boolean));
 
-  TEAM_COLORS.forEach((c, i)=>{
-    const btn = document.createElement('button');
-    btn.className = 'color-option';
-    btn.type = 'button';
-    btn.dataset.color = c.hex;
-    btn.title = c.name;
-    btn.setAttribute('aria-label', c.name);
+    TEAM_COLORS.forEach((c, i)=>{
+      const btn = document.createElement('button');
+      btn.className = 'color-option';
+      btn.type = 'button';
+      btn.dataset.color = c.hex;
+      btn.title = c.name;
+      btn.setAttribute('aria-label', c.name);
 
-    // style
-    btn.style.background = c.hex;
-    btn.style.position = 'relative';
+      btn.style.background = c.hex;
+      btn.style.position = 'relative';
 
-    // If color used, grey it out and mark disabled
-    if(used.has(c.hex.toLowerCase())){
-      btn.disabled = true;
-      btn.setAttribute('aria-disabled', 'true');
-      btn.title = `${c.name} — already used`;
-      btn.classList.remove('selected');
-      // add a subtle checkmark overlay to indicate "used"
-      const overlay = document.createElement('span');
-      overlay.className = 'color-used-badge';
-      overlay.textContent = 'Used';
-      btn.appendChild(overlay);
-    } else {
-      btn.onclick = (e)=> {
-        e.preventDefault();
-        document.querySelectorAll('.color-option').forEach(b=> b.classList.remove('selected'));
-        btn.classList.add('selected');
-      };
-    }
+      if(used.has(c.hex.toLowerCase())){
+        btn.disabled = true;
+        btn.setAttribute('aria-disabled', 'true');
+        btn.title = `${c.name} — already used`;
+        btn.classList.remove('selected');
+        const overlay = document.createElement('span');
+        overlay.className = 'color-used-badge';
+        overlay.textContent = 'Used';
+        btn.appendChild(overlay);
+      } else {
+        btn.onclick = (e)=> {
+          e.preventDefault();
+          document.querySelectorAll('.color-option').forEach(b=> b.classList.remove('selected'));
+          btn.classList.add('selected');
+        };
+      }
 
-    colorOptions.appendChild(btn);
-  });
+      colorOptions.appendChild(btn);
+    });
 
-  // auto-select first available (non-disabled) color
-  const first = colorOptions.querySelector('.color-option:not([disabled])');
-  document.querySelectorAll('.color-option').forEach(b=> b.classList.remove('selected'));
-  if(first) first.classList.add('selected');
-}
+    const first = colorOptions.querySelector('.color-option:not([disabled])');
+    document.querySelectorAll('.color-option').forEach(b=> b.classList.remove('selected'));
+    if(first) first.classList.add('selected');
+  }
+
   function openModal(){
     if(currentUserIsAdmin){
       modalMsg.style.color = '#f6a6a6';
@@ -778,7 +738,6 @@ function renderColorOptions(){
     }
     updateCreateButtonState();
 
-    // New: check admin status and show admin link (preferred via claims, fallback to users doc)
     (async ()=>{
       try {
         if(!user){
@@ -787,7 +746,6 @@ function renderColorOptions(){
           if(navAdmin) navAdmin.style.display = 'none';
           return;
         }
-        // preferred: check custom claims
         let claimsOk = false;
         try {
           const idRes = await user.getIdTokenResult();
@@ -796,7 +754,6 @@ function renderColorOptions(){
         } catch(e){ console.warn('getIdTokenResult failed when checking claims:', e); }
 
         if(!claimsOk){
-          // fallback: read users/{uid}
           try {
             const udoc = await getDoc(doc(db,'users', user.uid));
             const data = udoc.exists() ? udoc.data() : {};
@@ -828,9 +785,8 @@ function renderColorOptions(){
     const userRef = doc(db, 'users', uid);
     try {
       onSnapshot(userRef, (snap) => {
-        currentUserDoc = snap.exists ? snap.data() : null;
+        currentUserDoc = snap.exists() ? snap.data() : null;
 
-        // If users doc explicitly marks isAdmin, reflect that (keeps UI consistent)
         if(currentUserDoc && (currentUserDoc.isAdmin || currentUserDoc.isSuperAdmin)){
           currentUserIsAdmin = true;
         }
@@ -840,7 +796,6 @@ function renderColorOptions(){
     } catch(e){ console.error('startUserListener', e); }
   }
 
-  // --- Perform Firestore cleanup: remove user from teams and delete user doc ---
   async function performClientDelete(uid){
     try {
       const myTeams = (allTeams || []).filter(t => (t.members || []).includes(uid));
@@ -848,15 +803,12 @@ function renderColorOptions(){
         const members = t.members || [];
         const isCaptain = t.captainUid === uid;
         if(isCaptain && members.length <= 1){
-          // delete team if sole member and captain
           try { await deleteDoc(doc(db,'teams',t.id)); } catch(e){ console.warn('failed to delete team', t.id, e); }
         } else {
-          // remove from members if not sole captain
           try { await updateDoc(doc(db,'teams',t.id), { members: arrayRemove(uid) }); } catch(e){ console.warn('failed to remove member from team', t.id, e); }
         }
       }
 
-      // Delete user's Firestore profile doc
       try { await deleteDoc(doc(db,'users', uid)); } catch(e){ console.warn('failed to delete user doc', e); }
       return { success: true };
     } catch(err){
@@ -865,7 +817,6 @@ function renderColorOptions(){
     }
   }
 
-  // --- Modal helpers for reauth ---
   function openReauthModal(){
     const m = document.getElementById('reauthModal'); if(!m) return;
     m.setAttribute('aria-hidden','false'); m.classList.add('open');
@@ -877,7 +828,6 @@ function renderColorOptions(){
     m.setAttribute('aria-hidden','true'); m.classList.remove('open');
   }
 
-  // --- Reauth + delete flow ---
   async function promptForPasswordAndDelete(){
     if(!currentUser) { alert('You must be logged in to delete your account.'); return; }
 
@@ -914,10 +864,8 @@ function renderColorOptions(){
 
         const credential = EmailAuthProvider.credential(email, password);
 
-        // Reauthenticate (refreshes recent sign-in)
         await reauthenticateWithCredential(currentUser, credential);
 
-        // Now perform Firestore cleanup BEFORE deleting Auth user
         msgEl.textContent = 'Cleaning up Firestore...';
         const res = await performClientDelete(currentUser.uid);
         if(!res.success){
@@ -927,7 +875,6 @@ function renderColorOptions(){
           return;
         }
 
-        // Delete the Auth account (should succeed because we just reauth'd)
         try {
           await deleteUser(currentUser);
         } catch (delAuthErr) {
@@ -938,7 +885,6 @@ function renderColorOptions(){
           return;
         }
 
-        // final sign-out + redirect
         try { await signOut(auth); } catch(e){ /* ignore */ }
         cleanup(); closeReauthModal();
         alert('Account deleted. Redirecting home.');
@@ -962,22 +908,18 @@ function renderColorOptions(){
     };
   }
 
-  // Wire delete button to reauth flow
   deleteAccountBtn.addEventListener('click', async () => {
     if(!currentUser) { alert('You must be logged in to delete your account.'); return; }
     if(!confirm('Delete your account? This is permanent and will remove your profile and remove you from any teams.')) return;
-    // open password prompt and run reauth+delete
     promptForPasswordAndDelete();
   });
 
-  // ensure UI starts in a consistent state
   showAllMiniValues();
   showLoggedOut();
 
 })();
 
 (async function(){
-  // Try to reuse existing app if present, otherwise init using same config
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyDpKPIqiWrGpvE3xL6TBRQEEfrpZGIfedM",
     authDomain: "code-clash-2025.firebaseapp.com",
@@ -988,7 +930,6 @@ function renderColorOptions(){
     measurementId: "G-0BMTHMYMEL"
   };
 
-  // DOM
   const annCard = document.getElementById('annCard');
   const annCardList = document.getElementById('annCardList');
   const annListModal = document.getElementById('annListModal');
@@ -1001,31 +942,26 @@ function renderColorOptions(){
   const annFullBody = document.getElementById('annFullBody');
   const annFullClose = document.getElementById('annFullClose');
 
-  // open/close helpers
   function openModal(mod){ mod.setAttribute('aria-hidden','false'); mod.classList.add('open'); document.body.style.overflow='hidden'; }
   function closeModal(mod){ mod.setAttribute('aria-hidden','true'); mod.classList.remove('open'); document.body.style.overflow=''; }
 
   if(annModalClose) annModalClose.addEventListener('click', ()=> closeModal(annListModal));
   if(annFullClose) annFullClose.addEventListener('click', ()=> closeModal(annFullModal));
 
-  // clicking card opens modal (also keyboard)
   if(annCard){
     annCard.addEventListener('click', ()=> openModal(annListModal));
     annCard.addEventListener('keydown', (e)=> { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(annListModal); } });
   }
 
-  // initialize firebase only if not present (avoid double init)
-  const [{ initializeApp, getApps }, { getFirestore, collection, query, orderBy, onSnapshot }, { getAuth }] = await Promise.all([
-    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js'),
+  const [{ getFirestore }, { collection, query, orderBy, onSnapshot }] = await Promise.all([
     import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js'),
-    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js'),
-  ]).catch(err => { console.warn('Firebase import failed for announcements widget', err); return []; });
+    import('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js')
+  ]).catch(err => { 
+    console.warn('Firebase import failed for announcements widget', err); 
+    if(annCardList) annCardList.innerHTML = '<div class="ann-loading">Announcements unavailable</div>';
+    return []; 
+  });
 
-  if(typeof initializeApp === 'function' && getApps && getApps().length === 0){
-    initializeApp(FIREBASE_CONFIG);
-  }
-
-  // graceful exit if firestore not available
   if(typeof getFirestore !== 'function'){
     console.warn('Firestore not available, announcements widget disabled.');
     if(annCardList) annCardList.innerHTML = '<div class="ann-loading">Announcements unavailable</div>';
@@ -1036,21 +972,18 @@ function renderColorOptions(){
   const annCol = collection(db, 'announcements');
   const q = query(annCol, orderBy('createdAt','desc'));
 
-  // snapshot listener (published only)
   onSnapshot(q, (snap) => {
     const arr = [];
     snap.forEach(d => {
       const data = d.data() || {};
-      // show only published announcements to dashboard participants
       if(data.published) arr.push({ id: d.id, ...data });
     });
 
-    // pinned first (if any)
     arr.sort((a,b) => {
       if(!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
       const at = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
       const bt = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
-      return bt - at; // recent first
+      return bt - at;
     });
 
     renderCardList(arr);
@@ -1060,7 +993,6 @@ function renderColorOptions(){
     if(annCardList) annCardList.innerHTML = '<div class="ann-loading">Failed to load</div>';
   });
 
-  // render compact items inside card
   function renderCardList(items){
     if(!annCardList) return;
     if(items.length === 0){
@@ -1074,7 +1006,6 @@ function renderColorOptions(){
       node.className = 'ann-item';
       node.innerHTML = `<div class="i-title">${escapeHtml(it.title || '(untitled)')}</div>
                         <div class="i-excerpt">${escapeHtml((it.body||'').slice(0,140))}${(it.body||'').length>140 ? '…' : ''}</div>`;
-      // clicking on compact item opens the full modal
       node.addEventListener('click', (e)=> {
         e.stopPropagation();
         openFullAnnouncement(it);
@@ -1082,12 +1013,10 @@ function renderColorOptions(){
       annCardList.appendChild(node);
     }
 
-    // check if content overflows the fixed height -> show fade if yes
     const overflow = annCardList.scrollHeight > annCardList.clientHeight;
     annCardList.setAttribute('data-overflow', overflow ? 'true' : 'false');
   }
 
-  // render list in modal
   function renderModalList(items){
     if(!annModalList) return;
     annModalList.innerHTML = '';
@@ -1110,7 +1039,6 @@ function renderColorOptions(){
     }
   }
 
-  // open big full announcement modal
   function openFullAnnouncement(it){
     if(!annFullModal) return;
     annFullTitle.textContent = it.title || '(untitled)';
@@ -1120,13 +1048,11 @@ function renderColorOptions(){
     openModal(annFullModal);
   }
 
-  // small utils
   function escapeHtml(s){
     if(!s) return '';
     return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   }
 
-  // close modals on backdrop / esc
   document.addEventListener('click', (e)=>{
     if(e.target === annListModal) closeModal(annListModal);
     if(e.target === annFullModal) closeModal(annFullModal);

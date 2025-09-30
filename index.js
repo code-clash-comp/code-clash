@@ -237,7 +237,7 @@
             navLogin.onclick = ()=>{ doPulse(navLogin); window.location.href = 'login.html'; };
           }
           if(bigReg){
-            bigReg.textContent = 'Register for Code Clash 2025';
+            bigReg.textContent = 'Register for PyCode Clash 2025';
             bigReg.onclick = ()=>{ doPulse(bigReg); window.location.href = 'register.html'; };
           }
           if(welcomeMsg){
