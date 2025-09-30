@@ -25,9 +25,9 @@ if (user) {
     const idRes = await user.getIdTokenResult();
     const claims = idRes.claims || {};
     if (claims.superAdmin || claims.isSuperAdmin || claims.admin || claims.isAdmin) {
-        window.location.replace('admin.html');
+        window.location.replace('/code-clash/admin.html');
     } else {
-        window.location.replace('dashboard.html');
+        window.location.replace('/code-clash/dashboard.html');
     }
     return;
     } catch (err) {
@@ -43,7 +43,7 @@ if (user) {
 (function typewriterLogin(){
 const el = document.getElementById('typingTextLogin');
 const phrases = [
-    'Login to continue the clash',
+    'Login to enter the clash',
     'Good luck — train your loops',
     'Fastest correct solution wins'
 ];
@@ -97,7 +97,7 @@ try{
     await signInWithEmailAndPassword(auth, email, password);
     showMsg('Logged in — redirecting...', 'info');
     setTimeout(() => {
-    window.location.replace('dashboard.html');
+    window.location.replace('/code-clash/dashboard.html');
     }, 600);
 
 } catch(err){

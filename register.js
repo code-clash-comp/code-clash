@@ -144,9 +144,9 @@ onAuthStateChanged(auth, async (user) => {
       const idRes = await user.getIdTokenResult();
       const claims = idRes.claims || {};
       if (claims.superAdmin || claims.isSuperAdmin || claims.admin || claims.isAdmin) {
-        window.location.replace('admin.html');
+        window.location.replace('/code-clash/admin.html');
       } else {
-        window.location.replace('dashboard.html');
+        window.location.replace('/code-clash/dashboard.html');
       }
       return;
     } catch (err) {
@@ -201,7 +201,7 @@ form.addEventListener('submit', async (e) => {
     }
 
     regMsg('Registered successfully! Redirecting...', 'info');
-    setTimeout(() => { window.location.href = '/dashboard.html'; }, 900);
+    setTimeout(() => { window.location.href = '/code-clash/dashboard.html'; }, 900);
 
   } catch (err) {
     console.error('Registration error:', err);

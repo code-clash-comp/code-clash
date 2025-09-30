@@ -22,10 +22,10 @@
         <form id="registerForm" class="auth-form" autocomplete="off">
           <h2 class="form-title">Register</h2>
 
-          <input id="name" type="text" placeholder="Full Name" required autocomplete="name" />
-          <input id="grade" type="text" placeholder="Grade & Section" required />
+          <input id="name" type="text" pattern="[A-Za-z]+" title="No special characters allowed" placeholder="Full Name" required autocomplete="name" />
+          <input id="grade" type="text" pattern="[1-9][A-Z]" title="Format: 9B" placeholder="Grade & Section (format: 9B)" required />
           <input id="email" type="email" placeholder="Email" required autocomplete="email" />
-          <input id="phone" type="tel" placeholder="Phone Number" required />
+          <input id="phone" type="tel" maxlength="10" title="Needs to be 10 digits" placeholder="Phone Number" required />
           <input id="password" type="password" placeholder="Password" required autocomplete="new-password" />
 
           <button type="submit" class="auth-btn" id="registerBtn">Register</button>
